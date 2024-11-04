@@ -7,12 +7,12 @@ const app = new Elysia({ prefix: "/api", aot: false })
     // ROAST
 
     const prompt = `read this summary and roast them`;
-    
+
     // check KV store if accountId has already been analyzed
 
     // if not
-      // make request to chain analysis agent (dleer)
-      // save summary to kv store
+    // make request to chain analysis agent (dleer)
+    // save summary to kv store
 
     // run prompt on summary
 
