@@ -6,11 +6,13 @@ const app = new Elysia({ prefix: "/api", aot: false })
   .get("/roast/:accountId", async ({ params: { accountId } }) => {
     // ROAST
 
-    const prompt = `roast them`;
+    const prompt = `read this summary and roast them`;
+    
+    // check KV store if accountId has already been analyzed
 
-    // Make request to chain analysis
-
-    // get summary
+    // if not
+      // make request to chain analysis agent (dleer)
+      // save summary to kv store
 
     // run prompt on summary
 
