@@ -5,10 +5,10 @@
 
 <div align="center">
 
-<h1 style="font-size: 2.5rem; font-weight: bold;">Project Title</h1>
+<h1 style="font-size: 2.5rem; font-weight: bold;">NEAR Roast Agent</h1>
 
   <p>
-    <strong>This is a basic project template for new Build DAO projects</strong>
+    <strong>provide a near account and get roasted on your on-chain activity</strong>
   </p>
 
 </div>
