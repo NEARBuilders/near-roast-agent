@@ -10,7 +10,7 @@ const app = new Elysia({ prefix: "/api", aot: false })
 
     // Make request to chain analysis
 
-    // get summary 
+    // get summary
 
     // run prompt on summary
 
