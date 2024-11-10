@@ -32,8 +32,8 @@ export async function GET() {
         description:
           "An assistant that roasts a NEAR account based on their on-chain activity.",
         instructions:
-          "Get information for a given fungible token or swaps one token for another.",
-        tools: [{ type: "generate-transaction" }],
+          "Get on-chain activity for an account and roast them.",
+        tools: [{ type: "submit-query" }],
       },
     },
     paths: {
@@ -43,7 +43,7 @@ export async function GET() {
           summary: "Analyze NEAR account and provide roast",
           description:
             "This endpoint returns a roast for the provided accountId.",
-          operationId: "get-token-metadata",
+          operationId: "get-account-roast",
           parameters: [
             {
               name: "accountId",
