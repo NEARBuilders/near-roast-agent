@@ -31,8 +31,7 @@ export async function GET() {
         name: "NEAR Roast Agent",
         description:
           "An assistant that roasts a NEAR account based on their on-chain activity.",
-        instructions:
-          "Get on-chain activity for an account and roast them.",
+        instructions: "Get on-chain activity for an account and roast them.",
         tools: [{ type: "submit-query" }],
       },
     },

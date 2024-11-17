@@ -37,11 +37,13 @@
   },
   "dependencies": {
     "@elysiajs/swagger": "^1.0.5",
+    "@vercel/kv": "^3.0.0",
     "big.js": "^6.2.1",
     "elysia": "^1.0.16",
     "fuse.js": "^7.0.0",
     "make-agent": "^0.0.24-rc.2",
     "next": "14.2.16",
+    "openai": "^4.72.0",
     "react": "^18",
     "react-dom": "^18",
     "vercel-url": "^0.2.1"
