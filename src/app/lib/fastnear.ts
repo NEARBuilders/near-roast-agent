@@ -45,31 +45,35 @@ export interface AccountActivityResponse {
 const FASTNEAR_API_SERVER_RS = "https://api.fastnear.com";
 const FASTNEAR_EXPLORER = "https://explorer.main.fastnear.com";
 
-export async function getFullAccountDetails(accountId: string): Promise<FullAccountDetails> {
+export async function getFullAccountDetails(
+  accountId: string,
+): Promise<FullAccountDetails> {
   try {
-    const response = await fetch(`${FASTNEAR_API_SERVER_RS}/v1/account/${accountId}/full`);
-    
+    const response = await fetch(
+      `${FASTNEAR_API_SERVER_RS}/v1/account/${accountId}/full`,
+    );
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data: FullAccountDetails = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching account details:', error);
+    console.error("Error fetching account details:", error);
     throw error;
   }
 }
 
 export async function getAccountActivity(
   accountId: string,
-  maxBlockHeight?: number
+  maxBlockHeight?: number,
 ): Promise<AccountActivityResponse> {
   try {
     const response = await fetch(`${FASTNEAR_EXPLORER}/v0/account`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         account_id: accountId,
@@ -84,38 +88,44 @@ export async function getAccountActivity(
     const data: AccountActivityResponse = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching account activity:', error);
+    console.error("Error fetching account activity:", error);
     throw error;
   }
 }
 
 export async function getAllAccountActivity(
   accountId: string,
-  pages: number = 3
+  pages: number = 3,
 ): Promise<Transaction[]> {
   try {
     // First call without maxBlockHeight to get total transactions
     const firstPage = await getAccountActivity(accountId);
     let allTransactions = [...firstPage.account_txs];
-    
+
     if (!firstPage.total_txs || pages <= 1) {
       return allTransactions;
     }
 
     // Use the last transaction's block height from each page to fetch the next page
-    let lastBlockHeight = allTransactions[allTransactions.length - 1].tx_block_height;
-    
-    for (let i = 1; i < pages && allTransactions.length < firstPage.total_txs; i++) {
+    let lastBlockHeight =
+      allTransactions[allTransactions.length - 1].tx_block_height;
+
+    for (
+      let i = 1;
+      i < pages && allTransactions.length < firstPage.total_txs;
+      i++
+    ) {
       const nextPage = await getAccountActivity(accountId, lastBlockHeight);
       if (nextPage.account_txs.length === 0) break;
-      
+
       allTransactions = [...allTransactions, ...nextPage.account_txs];
-      lastBlockHeight = nextPage.account_txs[nextPage.account_txs.length - 1].tx_block_height;
+      lastBlockHeight =
+        nextPage.account_txs[nextPage.account_txs.length - 1].tx_block_height;
     }
 
     return allTransactions;
   } catch (error) {
-    console.error('Error fetching all account activity:', error);
+    console.error("Error fetching all account activity:", error);
     throw error;
   }
 }

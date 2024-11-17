@@ -1,4 +1,11 @@
-import { AccountActivityResponse, FullAccountDetails, getAccountActivity, getAllAccountActivity, getFullAccountDetails, Transaction } from "../lib/fastnear";
+import {
+  AccountActivityResponse,
+  FullAccountDetails,
+  getAccountActivity,
+  getAllAccountActivity,
+  getFullAccountDetails,
+  Transaction,
+} from "../lib/fastnear";
 import { runLLMInference } from "../lib/open-ai";
 
 interface AccountSummaryData {
@@ -46,48 +53,50 @@ function getUniqueItems(items: string[]): string[] {
 function processAccountData(
   details: FullAccountDetails,
   activity: AccountActivityResponse,
-  allActivity: Transaction[]
+  allActivity: Transaction[],
 ): AccountSummaryData {
   // Process balance
   const nearBalance = formatNearAmount(details.state.balance);
 
   // Process tokens - filter out empty balances
   const significantTokens = details.tokens
-    .filter(token => token.balance && token.balance !== '0')
-    .map(token => ({
+    .filter((token) => token.balance && token.balance !== "0")
+    .map((token) => ({
       contract: token.contract_id,
-      balance: token.balance
+      balance: token.balance,
     }));
 
   // Process unique interactions from transactions
-  const uniqueInteractions = getUniqueItems(allActivity.map(tx => tx.signer_id));
+  const uniqueInteractions = getUniqueItems(
+    allActivity.map((tx) => tx.signer_id),
+  );
   // Format recent transactions
-  const recentTransactions = allActivity.slice(0, 10).map(tx => ({
-    type: 'transaction',
+  const recentTransactions = allActivity.slice(0, 10).map((tx) => ({
+    type: "transaction",
     timestamp: tx.tx_block_timestamp,
-    details: `Interaction with ${tx.signer_id}`
+    details: `Interaction with ${tx.signer_id}`,
   }));
 
   return {
     account_id: details.account_id,
     state: {
       balance: nearBalance,
-      storage: details.state.storage_bytes
+      storage: details.state.storage_bytes,
     },
     assets: {
       totalTokens: details.tokens.length,
       significantTokens,
       totalNFTs: details.nfts.length,
-      nftCollections: details.nfts.map(nft => nft.contract_id)
+      nftCollections: details.nfts.map((nft) => nft.contract_id),
     },
     activity: {
       totalTransactions: activity.total_txs || 0,
       recentTransactions,
-      uniqueInteractions
+      uniqueInteractions,
     },
     staking: {
-      pools: details.pools.map(pool => pool.pool_id)
-    }
+      pools: details.pools.map((pool) => pool.pool_id),
+    },
   };
 }
 
@@ -100,18 +109,20 @@ Account Overview:
 
 Assets:
 - Holds ${data.assets.totalTokens} different tokens
-- Notable token holdings: ${data.assets.significantTokens.map(t =>
-    `${t.balance} of ${t.contract}`).join(', ')}
-- NFT Collections (${data.assets.totalNFTs}): ${data.assets.nftCollections.join(', ')}
+- Notable token holdings: ${data.assets.significantTokens
+    .map((t) => `${t.balance} of ${t.contract}`)
+    .join(", ")}
+- NFT Collections (${data.assets.totalNFTs}): ${data.assets.nftCollections.join(", ")}
 
 Activity:
 - Total transactions: ${data.activity.totalTransactions}
-- Recent activity: ${data.activity.recentTransactions.map(tx =>
-      `${formatTimestamp(tx.timestamp)}: ${tx.details}`).join('\n')}
+- Recent activity: ${data.activity.recentTransactions
+    .map((tx) => `${formatTimestamp(tx.timestamp)}: ${tx.details}`)
+    .join("\n")}
 - Unique interactions: ${data.activity.uniqueInteractions.length} different accounts
 
 Staking:
-- Active in ${data.staking.pools.length} staking pools: ${data.staking.pools.join(', ')}
+- Active in ${data.staking.pools.length} staking pools: ${data.staking.pools.join(", ")}
 
 Please analyze this data and provide:
 1. A summary of the account's main activities and holdings
@@ -127,7 +138,7 @@ export async function getAccountSummary(accountId: string): Promise<string> {
     const [details, activity, allActivity] = await Promise.all([
       getFullAccountDetails(accountId),
       getAccountActivity(accountId),
-      getAllAccountActivity(accountId, MAX_NUM_PAGES)
+      getAllAccountActivity(accountId, MAX_NUM_PAGES),
     ]);
 
     // Process the data into a structured format
@@ -141,7 +152,7 @@ export async function getAccountSummary(accountId: string): Promise<string> {
 
     return summary;
   } catch (error) {
-    console.error('Error generating account summary:', error);
+    console.error("Error generating account summary:", error);
     throw error;
   }
 }

@@ -19,7 +19,7 @@ const app = new Elysia({ prefix: "/api", aot: false })
       const cachedEntry = cache.get(cacheKey);
 
       let roast: string;
-      if (cachedEntry && (now - cachedEntry.timestamp) < CACHE_DURATION) {
+      if (cachedEntry && now - cachedEntry.timestamp < CACHE_DURATION) {
         console.log("using cache...");
         // Use cached roast if it's not expired
         roast = cachedEntry.roast;
@@ -31,7 +31,7 @@ const app = new Elysia({ prefix: "/api", aot: false })
         // Store in memory cache
         cache.set(cacheKey, {
           roast,
-          timestamp: now
+          timestamp: now,
         });
       }
 
@@ -39,10 +39,11 @@ const app = new Elysia({ prefix: "/api", aot: false })
     } catch (error: any) {
       return {
         error: error.message || "Internal server error",
-        status: 500
+        status: 500,
       };
     }
-  }).compile();
+  })
+  .compile();
 
 export const GET = app.handle;
 export const POST = app.handle;
