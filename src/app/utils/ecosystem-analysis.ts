@@ -33,13 +33,7 @@ const SIGNIFICANT_CONTRACTS: Record<string, ContractMetadata> = {
     risk: "safe",
     description: "Wrapped NEAR, basic DeFi user"
   },
-  "meme.near": {
-    name: "MEME",
-    category: "meme",
-    risk: "mega-degen",
-    description: "Peak degen behavior"
-  },
-  // Add more contract mappings as needed
+  // what else???
 };
 
 const INTERACTION_PATTERNS: InteractionPattern[] = [
@@ -55,15 +49,9 @@ const INTERACTION_PATTERNS: InteractionPattern[] = [
     category: "gambler",
     description: "Can't decide which chain to lose money on"
   },
-  {
-    pattern: [".nft", ".near"],
-    name: "NFT Collector",
-    category: "collector",
-    description: "Professional right-click saver"
-  },
+  // what else...
 ];
 
-// Helper functions to analyze interactions
 export function analyzeSignificantContracts(
   transactions: Transaction[],
   contracts = SIGNIFICANT_CONTRACTS

@@ -76,11 +76,11 @@ function processAccountData(
   const uniqueInteractions = getUniqueItems(
     allTransactions.map((tx) => tx.signer_id),
   );
-  // Format recent transactions
-  const recentTransactions = allTransactions.slice(0, 10).map((tx) => ({
+  // Format 200 most recent transactions
+  const recentTransactions = allTransactions.slice(0, 200).map((tx) => ({
     type: "transaction",
     timestamp: tx.tx_block_timestamp,
-    details: `Interaction with ${tx.signer_id}`,
+    details: `Interaction with ${tx.signer_id}`, // could we be more descriptive?
   }));
 
   const significantContracts = analyzeSignificantContracts(allTransactions);
