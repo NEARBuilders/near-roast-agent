@@ -7,6 +7,7 @@ import {
   Transaction,
 } from "../lib/fastnear";
 import { runLLMInference } from "../lib/open-ai";
+import { analyzeInteractionPatterns, analyzeSignificantContracts, ContractMetadata, InteractionPattern } from "./ecosystem-analysis";
 
 interface AccountSummaryData {
   account_id: string;
@@ -31,6 +32,10 @@ interface AccountSummaryData {
       details: string;
     }>;
     uniqueInteractions: string[];
+  };
+  analysis: {
+    significantContracts: Array<{contract: string; metadata: ContractMetadata; frequency: number}>;
+    interactionPatterns: Array<{pattern: InteractionPattern; matchCount: number}>;
   };
   staking: {
     pools: string[];
@@ -78,6 +83,9 @@ function processAccountData(
     details: `Interaction with ${tx.signer_id}`,
   }));
 
+  const significantContracts = analyzeSignificantContracts(allTransactions);
+  const interactionPatterns = analyzeInteractionPatterns(allTransactions);
+
   return {
     account_id: details.account_id,
     state: {
@@ -93,7 +101,11 @@ function processAccountData(
     activity: {
       totalTransactions: allActivity.txs_count || 0,
       recentTransactions,
-      uniqueInteractions,
+      uniqueInteractions
+    },
+    analysis: {
+      significantContracts,
+      interactionPatterns
     },
     staking: {
       pools: details.pools.map((pool) => pool.pool_id),
@@ -102,36 +114,37 @@ function processAccountData(
 }
 
 function createSummaryPrompt(data: AccountSummaryData): string {
-  return `As an advanced blockchain analysis agent, provide a comprehensive summary of this NEAR account's activity (${data.account_id}):
+  return `As an advanced blockchain analysis agent, analyze this NEAR account (${data.account_id}) and organize the findings into these specific categories:
 
-Account Overview:
-- Current balance: ${data.state.balance}
-- Storage usage: ${data.state.storage} bytes
+WEALTH_METRICS:
+- Balance: ${data.state.balance}
+- Total tokens: ${data.assets.totalTokens}
+- Notable holdings: ${data.assets.significantTokens.map((t) => `${t.balance} of ${t.contract}`).join(", ")}
+- NFT count: ${data.assets.totalNFTs}
+- Collections: ${data.assets.nftCollections.join(", ")}
 
-Assets:
-- Holds ${data.assets.totalTokens} different tokens
-- Notable token holdings: ${data.assets.significantTokens
-    .map((t) => `${t.balance} of ${t.contract}`)
-    .join(", ")}
-- NFT Collections (${data.assets.totalNFTs}): ${data.assets.nftCollections.join(", ")}
+BEHAVIOR_PATTERNS:
+- Transaction count: ${data.activity.totalTransactions}
+- Recent actions: ${data.activity.recentTransactions.map((tx) => `${formatTimestamp(tx.timestamp)}: ${tx.details}`).join("\n")}
+- Unique contacts: ${data.activity.uniqueInteractions.length}
 
-Activity:
-- Total transactions: ${data.activity.totalTransactions}
-- Recent activity: ${data.activity.recentTransactions
-    .map((tx) => `${formatTimestamp(tx.timestamp)}: ${tx.details}`)
-    .join("\n")}
-- Unique interactions: ${data.activity.uniqueInteractions.length} different accounts
+DEGEN_ANALYSIS:
+- Key contracts: ${data.analysis.significantContracts.map(c => 
+    `${c.contract} (${c.metadata.name}): ${c.frequency} interactions - ${c.metadata.description}`
+  ).join("\n")}
+- Behavior patterns: ${data.analysis.interactionPatterns.map(p =>
+    `${p.pattern.name}: ${p.matchCount} matches - ${p.pattern.description}`
+  ).join("\n")}
 
-Staking:
-- Active in ${data.staking.pools.length} staking pools: ${data.staking.pools.join(", ")}
+ECOSYSTEM_ROLE:
+- Active staking pools: ${data.staking.pools.join(", ")}
 
-Please analyze this data and provide:
-1. A summary of the account's main activities and holdings
-2. Key behavioral patterns and trends in transaction history
-3. High-level assessment of the account's role in the ecosystem
-4. Unusual or noteworthy characteristics
-5. Any potential risks or opportunities associated with this account
-6. Important relationships or interactions
+Analyze and categorize:
+1. Account wealth tier (whale, average, poor)
+2. Trading behavior (diamond hands, paper hands, degen)
+3. Community involvement (active, lurker, ghost)
+4. Investment style (NFT collector, token trader, staking focused)
+5. Risk profile (conservative, moderate, degen)
 `;
 }
 
@@ -149,6 +162,10 @@ export async function getAccountSummary(accountId: string): Promise<string> {
 
     // Create the prompt for LLM
     const prompt = createSummaryPrompt(processedData);
+
+    console.log("\n PROMPT \n");
+    console.log(prompt);
+    console.log("\n");
 
     // Run LLM inference on structured account data
     const summary = await runLLMInference(prompt);
