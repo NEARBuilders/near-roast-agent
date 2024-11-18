@@ -105,23 +105,19 @@ export async function getAllAccountActivity(
     if (!totalTransactions || pages <= 1) {
       return {
         account_txs: allTransactions,
-        txs_count: totalTransactions
-      }
+        txs_count: totalTransactions,
+      };
     }
 
     const transactionsPerPage = 200;
     const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
-    const maxPages = Math.min(pages, totalPages); 
+    const maxPages = Math.min(pages, totalPages);
 
     // Use the last transaction's block height from each page to fetch the next page
     let lastBlockHeight =
       allTransactions[allTransactions.length - 1].tx_block_height;
 
-    for (
-      let i = 1;
-      i < maxPages;
-      i++
-    ) {
+    for (let i = 1; i < maxPages; i++) {
       const nextPage = await getAccountActivity(accountId, lastBlockHeight);
       if (nextPage.account_txs.length === 0) break;
 
@@ -132,7 +128,7 @@ export async function getAllAccountActivity(
 
     return {
       account_txs: allTransactions,
-      txs_count: totalTransactions
+      txs_count: totalTransactions,
     };
   } catch (error) {
     console.error("Error fetching all account activity:", error);
