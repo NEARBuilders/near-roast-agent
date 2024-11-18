@@ -7,7 +7,12 @@ import {
   Transaction,
 } from "../lib/fastnear";
 import { runLLMInference } from "../lib/open-ai";
-import { analyzeInteractionPatterns, analyzeSignificantContracts, ContractMetadata, InteractionPattern } from "./ecosystem-analysis";
+import {
+  analyzeInteractionPatterns,
+  analyzeSignificantContracts,
+  ContractMetadata,
+  InteractionPattern,
+} from "./ecosystem-analysis";
 
 interface AccountSummaryData {
   account_id: string;
@@ -34,8 +39,15 @@ interface AccountSummaryData {
     uniqueInteractions: string[];
   };
   analysis: {
-    significantContracts: Array<{contract: string; metadata: ContractMetadata; frequency: number}>;
-    interactionPatterns: Array<{pattern: InteractionPattern; matchCount: number}>;
+    significantContracts: Array<{
+      contract: string;
+      metadata: ContractMetadata;
+      frequency: number;
+    }>;
+    interactionPatterns: Array<{
+      pattern: InteractionPattern;
+      matchCount: number;
+    }>;
   };
   staking: {
     pools: string[];
@@ -101,11 +113,11 @@ function processAccountData(
     activity: {
       totalTransactions: allActivity.txs_count || 0,
       recentTransactions,
-      uniqueInteractions
+      uniqueInteractions,
     },
     analysis: {
       significantContracts,
-      interactionPatterns
+      interactionPatterns,
     },
     staking: {
       pools: details.pools.map((pool) => pool.pool_id),
@@ -129,12 +141,18 @@ BEHAVIOR_PATTERNS:
 - Unique contacts: ${data.activity.uniqueInteractions.length}
 
 DEGEN_ANALYSIS:
-- Key contracts: ${data.analysis.significantContracts.map(c => 
-    `${c.contract} (${c.metadata.name}): ${c.frequency} interactions - ${c.metadata.description}`
-  ).join("\n")}
-- Behavior patterns: ${data.analysis.interactionPatterns.map(p =>
-    `${p.pattern.name}: ${p.matchCount} matches - ${p.pattern.description}`
-  ).join("\n")}
+- Key contracts: ${data.analysis.significantContracts
+    .map(
+      (c) =>
+        `${c.contract} (${c.metadata.name}): ${c.frequency} interactions - ${c.metadata.description}`,
+    )
+    .join("\n")}
+- Behavior patterns: ${data.analysis.interactionPatterns
+    .map(
+      (p) =>
+        `${p.pattern.name}: ${p.matchCount} matches - ${p.pattern.description}`,
+    )
+    .join("\n")}
 
 ECOSYSTEM_ROLE:
 - Active staking pools: ${data.staking.pools.join(", ")}
