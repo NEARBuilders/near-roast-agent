@@ -52,8 +52,7 @@ function getUniqueItems(items: string[]): string[] {
 
 function processAccountData(
   details: FullAccountDetails,
-  activity: AccountActivityResponse,
-  allActivity: Transaction[],
+  allActivity: AccountActivityResponse,
 ): AccountSummaryData {
   // Process balance
   const nearBalance = formatNearAmount(details.state.balance);
@@ -66,12 +65,14 @@ function processAccountData(
       balance: token.balance,
     }));
 
+  const allTransactions = allActivity.account_txs;
+
   // Process unique interactions from transactions
   const uniqueInteractions = getUniqueItems(
-    allActivity.map((tx) => tx.signer_id),
+    allTransactions.map((tx) => tx.signer_id),
   );
   // Format recent transactions
-  const recentTransactions = allActivity.slice(0, 10).map((tx) => ({
+  const recentTransactions = allTransactions.slice(0, 10).map((tx) => ({
     type: "transaction",
     timestamp: tx.tx_block_timestamp,
     details: `Interaction with ${tx.signer_id}`,
@@ -90,7 +91,7 @@ function processAccountData(
       nftCollections: details.nfts.map((nft) => nft.contract_id),
     },
     activity: {
-      totalTransactions: activity.total_txs || 0,
+      totalTransactions: allActivity.txs_count || 0,
       recentTransactions,
       uniqueInteractions,
     },
@@ -132,17 +133,16 @@ Please analyze this data and provide:
 }
 
 export async function getAccountSummary(accountId: string): Promise<string> {
-  const MAX_NUM_PAGES = 5; // maximum pages of transaction data to fetch
+  const MAX_NUM_PAGES = 20; // maximum pages of transaction data to fetch (200/page = 4000 txs)
   try {
     // Fetch all required data
-    const [details, activity, allActivity] = await Promise.all([
+    const [details, allActivity] = await Promise.all([
       getFullAccountDetails(accountId),
-      getAccountActivity(accountId),
       getAllAccountActivity(accountId, MAX_NUM_PAGES),
     ]);
 
     // Process the data into a structured format
-    const processedData = processAccountData(details, activity, allActivity);
+    const processedData = processAccountData(details, allActivity);
 
     // Create the prompt for LLM
     const prompt = createSummaryPrompt(processedData);

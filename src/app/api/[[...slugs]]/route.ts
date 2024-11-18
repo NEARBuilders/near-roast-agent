@@ -13,6 +13,7 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 const app = new Elysia({ prefix: "/api", aot: false })
   .use(swagger())
   .get("/roast/:accountId", async ({ params: { accountId }, set }) => {
+    // do an accountId check
     try {
       const cacheKey = accountId;
       const now = Date.now();
@@ -27,7 +28,7 @@ const app = new Elysia({ prefix: "/api", aot: false })
         // Analyze account and get summary
         console.log("getting account summary...");
         const summary = await getAccountSummary(accountId);
-        roast = summary;
+        roast = summary; // we could do some roasting here, but just returning directly and gonna tweek the instructions instead
         // Store in memory cache
         cache.set(cacheKey, {
           roast,

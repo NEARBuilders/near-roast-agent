@@ -38,8 +38,7 @@ export interface Transaction {
 
 export interface AccountActivityResponse {
   account_txs: Transaction[];
-  transactions: any[];
-  total_txs?: number; // Only present when max_block_height is not provided
+  txs_count?: number; // Only present when max_block_height is not provided
 }
 
 const FASTNEAR_API_SERVER_RS = "https://api.fastnear.com";
@@ -96,15 +95,23 @@ export async function getAccountActivity(
 export async function getAllAccountActivity(
   accountId: string,
   pages: number = 3,
-): Promise<Transaction[]> {
+): Promise<AccountActivityResponse> {
   try {
     // First call without maxBlockHeight to get total transactions
     const firstPage = await getAccountActivity(accountId);
     let allTransactions = [...firstPage.account_txs];
+    const totalTransactions = firstPage.txs_count;
 
-    if (!firstPage.total_txs || pages <= 1) {
-      return allTransactions;
+    if (!totalTransactions || pages <= 1) {
+      return {
+        account_txs: allTransactions,
+        txs_count: totalTransactions
+      }
     }
+
+    const transactionsPerPage = 200;
+    const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
+    const maxPages = Math.min(pages, totalPages); 
 
     // Use the last transaction's block height from each page to fetch the next page
     let lastBlockHeight =
@@ -112,7 +119,7 @@ export async function getAllAccountActivity(
 
     for (
       let i = 1;
-      i < pages && allTransactions.length < firstPage.total_txs;
+      i < maxPages;
       i++
     ) {
       const nextPage = await getAccountActivity(accountId, lastBlockHeight);
@@ -123,7 +130,10 @@ export async function getAllAccountActivity(
         nextPage.account_txs[nextPage.account_txs.length - 1].tx_block_height;
     }
 
-    return allTransactions;
+    return {
+      account_txs: allTransactions,
+      txs_count: totalTransactions
+    };
   } catch (error) {
     console.error("Error fetching all account activity:", error);
     throw error;
