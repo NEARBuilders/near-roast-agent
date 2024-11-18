@@ -102,7 +102,7 @@ function processAccountData(
 }
 
 function createSummaryPrompt(data: AccountSummaryData): string {
-  return `Please provide a comprehensive summary of this NEAR account (${data.account_id}):
+  return `As an advanced blockchain analysis agent, provide a comprehensive summary of this NEAR account's activity (${data.account_id}):
 
 Account Overview:
 - Current balance: ${data.state.balance}
@@ -127,9 +127,12 @@ Staking:
 
 Please analyze this data and provide:
 1. A summary of the account's main activities and holdings
-2. Notable patterns in transaction history
-3. Assessment of the account's engagement with the NEAR ecosystem
-4. Any interesting observations about the account's behavior`;
+2. Key behavioral patterns and trends in transaction history
+3. High-level assessment of the account's role in the ecosystem
+4. Unusual or noteworthy characteristics
+5. Any potential risks or opportunities associated with this account
+6. Important relationships or interactions
+`;
 }
 
 export async function getAccountSummary(accountId: string): Promise<string> {
