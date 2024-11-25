@@ -1,4 +1,5 @@
 import { getAccountSummary } from "@/app/utils/account-summary";
+import { isValidNearAccount } from "@/app/utils/validate";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 
@@ -14,6 +15,10 @@ const app = new Elysia({ prefix: "/api", aot: false })
   .use(swagger())
   .get("/roast/:accountId", async ({ params: { accountId }, set }) => {
     // do an accountId check
+    if (!(await isValidNearAccount(accountId))) {
+      return "you're dumb, this isn't a real account";
+    }
+
     try {
       const cacheKey = accountId;
       const now = Date.now();
