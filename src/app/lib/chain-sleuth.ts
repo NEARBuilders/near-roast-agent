@@ -1,7 +1,6 @@
 // const NEARLANTIR_API = "https://filepile.ai";
-const NEARLANTIR_API = "http://localhost:3005";
-const NEARLANTIR_API_KEY =
-  "a77218d1ea343e98167ed59d6fbccd7dd8883f95de4ec177b16cd500400d6b5c";
+const NEARLANTIR_API = process.env.NEARLANTIR_API_URL;
+const NEARLANTIR_API_KEY = process.env.NEARLANTIR_API_KEY;
 
 type TaskStatus = "processing" | "completed" | "error";
 
