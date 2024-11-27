@@ -26,7 +26,7 @@ export async function GET() {
       },
     ],
     "x-mb": {
-      "account-id": key.accountId || "",
+      "account-id": key.accountId || "near-roasts.near",
       assistant: {
         name: "NEAR Roast Agent",
         description:
