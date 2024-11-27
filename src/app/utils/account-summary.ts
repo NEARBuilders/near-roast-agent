@@ -1,17 +1,18 @@
+import { Interaction } from "../data/interaction-patterns";
 import {
   AccountActivityResponse,
   FullAccountDetails,
-  getAccountActivity,
   getAllAccountActivity,
   getFullAccountDetails,
-  Transaction,
+  RecentTransaction,
+  TokenContract,
+  Transaction
 } from "../lib/fastnear";
 import { runLLMInference } from "../lib/open-ai";
 import {
   analyzeInteractionPatterns,
-  analyzeSignificantContracts,
-  ContractMetadata,
-  InteractionPattern,
+  analyzeNftHoldings,
+  analyzeTokenHoldings,
 } from "./ecosystem-analysis";
 
 interface AccountSummaryData {
@@ -22,35 +23,22 @@ interface AccountSummaryData {
   };
   assets: {
     totalTokens: number;
-    significantTokens: Array<{
-      contract: string;
-      balance: string;
-    }>;
+    tokenHoldings: TokenContract[];
     totalNFTs: number;
-    nftCollections: string[];
+    nftHoldings: string[];
   };
   activity: {
     totalTransactions: number;
-    recentTransactions: Array<{
-      type: string;
-      timestamp: number;
-      details: string;
-    }>;
-    uniqueInteractions: string[];
+    recentTransactions: RecentTransaction[];
+    uniqueInteractions: Interaction[];
   };
   analysis: {
-    significantContracts: Array<{
-      contract: string;
-      metadata: ContractMetadata;
-      frequency: number;
-    }>;
-    interactionPatterns: Array<{
-      pattern: InteractionPattern;
-      matchCount: number;
-    }>;
+    tokenHoldings: string[],
+    nftHoldings: string[]
+    interactionPatterns: Record<string, string>;
   };
   staking: {
-    pools: string[];
+    pools: string[]; // staking pools
   };
 }
 
@@ -63,8 +51,34 @@ function formatTimestamp(timestamp: number): string {
   return new Date(timestamp / 1000000).toISOString();
 }
 
-function getUniqueItems(items: string[]): string[] {
-  return Array.from(new Set(items));
+function getUniqueAddresses(transactions: Transaction[], recentTransactions: RecentTransaction[]): Interaction[] {
+  const addressCounts = new Map<string, number>();
+
+  // Count both signer_id and account_id interactions
+  transactions.forEach(tx => {
+    // Count signer_id
+    addressCounts.set(tx.signer_id, (addressCounts.get(tx.signer_id) || 0) + 1);
+
+    // Count account_id if it's different from signer_id
+    if (tx.account_id !== tx.signer_id) {
+      addressCounts.set(tx.account_id, (addressCounts.get(tx.account_id) || 0) + 1);
+    }
+  });
+
+  recentTransactions.forEach(tx => {
+    // Count signer_id
+    addressCounts.set(tx.transaction.signer_id, (addressCounts.get(tx.transaction.signer_id) || 0) + 1);
+
+    // Count receiver_id if it's different from signer_id
+    if (tx.transaction.receiver_id !== tx.transaction.signer_id) {
+      addressCounts.set(tx.transaction.receiver_id, (addressCounts.get(tx.transaction.receiver_id) || 0) + 1);
+    }
+  });
+
+  return Array.from(addressCounts.entries()).map(([address, count]) => ({
+    contract_id: address,
+    count
+  }));
 }
 
 function processAccountData(
@@ -74,29 +88,17 @@ function processAccountData(
   // Process balance
   const nearBalance = formatNearAmount(details.state.balance);
 
-  // Process tokens - filter out empty balances
-  const significantTokens = details.tokens
-    .filter((token) => token.balance && token.balance !== "0")
-    .map((token) => ({
-      contract: token.contract_id,
-      balance: token.balance,
-    }));
-
   const allTransactions = allActivity.account_txs;
+  const recentTransactions = allActivity.transactions;
 
   // Process unique interactions from transactions
-  const uniqueInteractions = getUniqueItems(
-    allTransactions.map((tx) => tx.signer_id),
+  const uniqueInteractions = getUniqueAddresses(
+    allTransactions, recentTransactions
   );
-  // Format 200 most recent transactions
-  const recentTransactions = allTransactions.slice(0, 200).map((tx) => ({
-    type: "transaction",
-    timestamp: tx.tx_block_timestamp,
-    details: `Interaction with ${tx.signer_id}`, // could we be more descriptive?
-  }));
 
-  const significantContracts = analyzeSignificantContracts(allTransactions);
-  const interactionPatterns = analyzeInteractionPatterns(allTransactions);
+  const tokenAnalysis = analyzeTokenHoldings(details.tokens);
+  const nftAnalysis = analyzeNftHoldings(details.nfts)
+  const patterns = analyzeInteractionPatterns(uniqueInteractions);
 
   return {
     account_id: details.account_id,
@@ -106,9 +108,9 @@ function processAccountData(
     },
     assets: {
       totalTokens: details.tokens.length,
-      significantTokens,
+      tokenHoldings: details.tokens,
       totalNFTs: details.nfts.length,
-      nftCollections: details.nfts.map((nft) => nft.contract_id),
+      nftHoldings: details.nfts.map((nft) => nft.contract_id),
     },
     activity: {
       totalTransactions: allActivity.txs_count || 0,
@@ -116,8 +118,9 @@ function processAccountData(
       uniqueInteractions,
     },
     analysis: {
-      significantContracts,
-      interactionPatterns,
+      tokenHoldings: tokenAnalysis,
+      nftHoldings: nftAnalysis,
+      interactionPatterns: patterns,
     },
     staking: {
       pools: details.pools.map((pool) => pool.pool_id),
@@ -126,44 +129,68 @@ function processAccountData(
 }
 
 function createSummaryPrompt(data: AccountSummaryData): string {
-  return `As an advanced blockchain analysis agent, analyze this NEAR account (${data.account_id}) and organize the findings into these specific categories:
+  // Analyze wealth level
+  const balanceInNear = parseFloat(data.state.balance);
+  const wealthAnalysis = balanceInNear < 10 ? "Broke degen, needs a faucet"
+    : balanceInNear < 100 ? "calls themselves a NEAR OG but can't afford gas fees"
+      : balanceInNear < 1000 ? "medium balance energy, definitely lost it all on ref finance"
+        : "whale alert 🚨 (in their dreams)";
 
-WEALTH_METRICS:
-- Balance: ${data.state.balance}
-- Total tokens: ${data.assets.totalTokens}
-- Notable holdings: ${data.assets.significantTokens.map((t) => `${t.balance} of ${t.contract}`).join(", ")}
-- NFT count: ${data.assets.totalNFTs}
-- Collections: ${data.assets.nftCollections.join(", ")}
+  // Format transaction analysis
+  const txCount = data.activity.totalTransactions;
+  const activityLevel = txCount < 50 ? "Barely uses their wallet"
+    : txCount < 200 ? "Regular degen"
+      : txCount < 3000 ? "No-life degen"
+        : "Terminal blockchain addiction";
 
-BEHAVIOR_PATTERNS:
-- Transaction count: ${data.activity.totalTransactions}
-- Recent actions: ${data.activity.recentTransactions.map((tx) => `${formatTimestamp(tx.timestamp)}: ${tx.details}`).join("\n")}
-- Unique contacts: ${data.activity.uniqueInteractions.length}
+  // Format interaction analysis with reputations
+  const interactionSummary = data.activity.uniqueInteractions
+    .map(interaction => {
+      const reputation = data.analysis.interactionPatterns[interaction.contract_id];
+      if (reputation) {
+        return `- ${interaction.count}x with ${interaction.contract_id}: REPUTATION: ${reputation}`;
+      }
+      return `- ${interaction.count}x with ${interaction.contract_id}`;
+    })
+    .join('\n');
 
-DEGEN_ANALYSIS:
-- Key contracts: ${data.analysis.significantContracts
-    .map(
-      (c) =>
-        `${c.contract} (${c.metadata.name}): ${c.frequency} interactions - ${c.metadata.description}`,
-    )
-    .join("\n")}
-- Behavior patterns: ${data.analysis.interactionPatterns
-    .map(
-      (p) =>
-        `${p.pattern.name}: ${p.matchCount} matches - ${p.pattern.description}`,
-    )
-    .join("\n")}
+  return `🔍 On-Chain Analysis of ${data.account_id}
 
-ECOSYSTEM_ROLE:
-- Active staking pools: ${data.staking.pools.join(", ")}
+💰 WEALTH ANALYSIS:
+- Current status: ${wealthAnalysis} with ${data.state.balance} NEAR
+- Storage usage: ${data.state.storage} bytes of blockchain pollution
 
-Analyze and categorize:
-1. Account wealth tier (whale, average, poor)
-2. Trading behavior (diamond hands, paper hands, degen)
-3. Community involvement (active, lurker, ghost)
-4. Investment style (NFT collector, token trader, staking focused)
-5. Risk profile (conservative, moderate, degen)
-`;
+🏦 PORTFOLIO ANALYSIS:
+Token Holdings (${data.assets.totalTokens} total):
+${data.analysis.tokenHoldings.join('\n')}
+
+NFT Collection (${data.assets.totalNFTs} total):
+${data.analysis.nftHoldings.join('\n')}
+
+📊 BEHAVIOR ANALYSIS:
+Activity Level: ${activityLevel}
+- ${txCount} total transactions
+- ${data.activity.uniqueInteractions.length} unique contracts interacted with
+
+Notable Interactions:
+${interactionSummary}
+
+🥩 STAKING BEHAVIOR:
+${data.staking.pools.length === 0
+      ? "Not staking anything, certified paper hands"
+      : `Staking in ${data.staking.pools.length} pools: ${data.staking.pools.join(', ')}`}
+
+🎯 ANALYSIS SUMMARY:
+This account shows all the classic signs of ${txCount > 1000 ? "a terminally online degen"
+      : txCount > 500 ? "someone who needs to touch grass"
+        : txCount > 100 ? "your average NEAR user"
+          : "a blockchain tourist"
+    }
+
+Their portfolio clearly indicates ${data.assets.totalTokens > 10 ? "a severe addiction to shitcoins"
+      : data.assets.totalTokens > 5 ? "an aspiring shitcoin collector"
+        : "someone who hasn't discovered meme tokens yet"
+    }`;
 }
 
 export async function getAccountSummary(accountId: string): Promise<string> {
@@ -181,14 +208,14 @@ export async function getAccountSummary(accountId: string): Promise<string> {
     // Create the prompt for LLM
     const prompt = createSummaryPrompt(processedData);
 
-    console.log("\n PROMPT \n");
-    console.log(prompt);
-    console.log("\n");
+    // console.log("\n PROMPT \n");
+    // console.log(prompt);
+    // console.log("\n");
 
-    // Run LLM inference on structured account data
-    const summary = await runLLMInference(prompt);
+    // // Run LLM inference on structured account data
+    // const summary = await runLLMInference(prompt);
 
-    return summary;
+    return prompt;
   } catch (error) {
     console.error("Error generating account summary:", error);
     throw error;

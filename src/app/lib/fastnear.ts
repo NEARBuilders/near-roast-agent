@@ -29,15 +29,23 @@ export interface FullAccountDetails {
 }
 
 export interface Transaction {
-  account_id: string;
   signer_id: string;
+  account_id: string;
   transaction_hash: string;
   tx_block_height: number;
   tx_block_timestamp: number;
 }
 
+export interface RecentTransaction {
+  transaction: {
+    receiver_id: string;
+    signer_id: string;
+  }
+}
+
 export interface AccountActivityResponse {
   account_txs: Transaction[];
+  transactions: RecentTransaction[];
   txs_count?: number; // Only present when max_block_height is not provided
 }
 
@@ -100,11 +108,13 @@ export async function getAllAccountActivity(
     // First call without maxBlockHeight to get total transactions
     const firstPage = await getAccountActivity(accountId);
     let allTransactions = [...firstPage.account_txs];
+    let recentTransactions = [...firstPage.transactions];
     const totalTransactions = firstPage.txs_count;
 
     if (!totalTransactions || pages <= 1) {
       return {
         account_txs: allTransactions,
+        transactions: recentTransactions,
         txs_count: totalTransactions,
       };
     }
@@ -122,12 +132,14 @@ export async function getAllAccountActivity(
       if (nextPage.account_txs.length === 0) break;
 
       allTransactions = [...allTransactions, ...nextPage.account_txs];
+      recentTransactions = [...recentTransactions, ...nextPage.transactions];
       lastBlockHeight =
         nextPage.account_txs[nextPage.account_txs.length - 1].tx_block_height;
     }
 
     return {
       account_txs: allTransactions,
+      transactions: recentTransactions,
       txs_count: totalTransactions,
     };
   } catch (error) {

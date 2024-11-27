@@ -7,7 +7,7 @@ const openai = new OpenAI({
 export async function runLLMInference(prompt: string): Promise<string> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o", // should we use a better model?
       messages: [
         {
           role: "user",

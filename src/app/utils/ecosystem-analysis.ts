@@ -1,96 +1,76 @@
-import { Transaction } from "../lib/fastnear";
+import { Interaction, INTERACTION_PATTERNS } from "../data/interaction-patterns";
+import { NFT_REPUTATIONS } from "../data/nft-reputations";
+import { TOKEN_REPUTATIONS } from "../data/token-reputations";
+import { NFTContract, TokenContract } from "../lib/fastnear";
 
-export interface ContractMetadata {
-  name: string;
-  category: "defi" | "nft" | "gaming" | "dao" | "meme" | "stablecoin" | "scam";
-  risk: "safe" | "medium" | "degen" | "mega-degen";
-  description: string;
+export function analyzeInteractionPatterns(
+  interactions: Interaction[],
+  patterns = INTERACTION_PATTERNS,
+): Record<string, string> {
+  const reputations: Record<string, string> = {};
+
+  // For each interaction
+  interactions.forEach(interaction => {
+    // Check each pattern to see if this interaction's contract_id matches
+    patterns.forEach(pattern => {
+      if (pattern.pattern.includes(interaction.contract_id)) {
+        // Add it to our reputations object with the contract_id as the key
+        reputations[interaction.contract_id] = pattern.reputation;
+      }
+    });
+  });
+
+  return reputations;
 }
 
-export interface InteractionPattern {
-  pattern: string[];
-  name: string;
-  category: "trader" | "farmer" | "gambler" | "collector" | "bot" | "whale";
-  description: string;
-}
+export function analyzeTokenHoldings(
+  tokenHoldings: TokenContract[],
+  tokenReputations = TOKEN_REPUTATIONS
+): string[] {
+  let numTokensNobodyHasEverHeardOf = 0;
+  const reputationStrings: string[] = [];
 
-const SIGNIFICANT_CONTRACTS: Record<string, ContractMetadata> = {
-  "v2.ref-finance.near": {
-    name: "Ref Finance",
-    category: "defi",
-    risk: "medium",
-    description: "Popular DEX, probably degen trading",
-  },
-  "nf-treasury.near": {
-    name: "NEAR Foundation Treasury",
-    category: "dao",
-    risk: "safe",
-    description: "Illuminati confirmed",
-  },
-  "wrap.near": {
-    name: "wNEAR",
-    category: "defi",
-    risk: "safe",
-    description: "Wrapped NEAR, basic DeFi user",
-  },
-  // what else???
-};
-
-const INTERACTION_PATTERNS: InteractionPattern[] = [
-  {
-    pattern: ["v2.ref-finance.near", "wrap.near"],
-    name: "DeFi Degen",
-    category: "trader",
-    description: "Loves losing money on DEXes",
-  },
-  {
-    pattern: ["aurora", "rainbow-bridge.near"],
-    name: "Bridge Explorer",
-    category: "gambler",
-    description: "Can't decide which chain to lose money on",
-  },
-  // what else...
-];
-
-export function analyzeSignificantContracts(
-  transactions: Transaction[],
-  contracts = SIGNIFICANT_CONTRACTS,
-): Array<{ contract: string; metadata: ContractMetadata; frequency: number }> {
-  const contractCounts = new Map<string, number>();
-
-  // Count interactions with significant contracts
-  transactions.forEach((tx) => {
-    if (contracts[tx.signer_id]) {
-      contractCounts.set(
-        tx.signer_id,
-        (contractCounts.get(tx.signer_id) || 0) + 1,
-      );
+  // Cycle through token holdings and gather reputations
+  tokenHoldings.forEach((token) => {
+    const tokenRep = tokenReputations[token.contract_id];
+    if (tokenRep) {
+      reputationStrings.push(`${tokenRep.name} - ${tokenRep.category} - risk level ${tokenRep.risk} - REPUTATION: ${tokenRep.reputation}`);
+    } else {
+      numTokensNobodyHasEverHeardOf += 1;
     }
   });
 
-  // Convert to array and sort by frequency
-  return Array.from(contractCounts.entries())
-    .map(([contract, frequency]) => ({
-      contract,
-      metadata: contracts[contract],
-      frequency,
-    }))
-    .sort((a, b) => b.frequency - a.frequency);
+  if (numTokensNobodyHasEverHeardOf > 0) {
+    reputationStrings.push(
+      `and ${numTokensNobodyHasEverHeardOf} tokens nobody has ever heard of`
+    );
+  }
+
+  return reputationStrings;
 }
 
-export function analyzeInteractionPatterns(
-  transactions: Transaction[],
-  patterns = INTERACTION_PATTERNS,
-): Array<{ pattern: InteractionPattern; matchCount: number }> {
-  return patterns
-    .map((pattern) => ({
-      pattern,
-      matchCount: transactions.filter((tx) =>
-        pattern.pattern.some(
-          (p) => tx.signer_id.includes(p) || tx.signer_id.includes(p),
-        ),
-      ).length,
-    }))
-    .filter((result) => result.matchCount > 0)
-    .sort((a, b) => b.matchCount - a.matchCount);
+export function analyzeNftHoldings(
+  nftHoldings: NFTContract[],
+  nftReputations = NFT_REPUTATIONS
+): string[] {
+  let numNftsNobodyHasEverHeardOf = 0;
+  const reputationStrings: string[] = [];
+
+  // Cycle through token holdings and gather reputations
+  nftHoldings.forEach((nft) => {
+    const tokenRep = nftReputations[nft.contract_id];
+    if (tokenRep) {
+      reputationStrings.push(`${tokenRep.name} - ${tokenRep.category} - risk level ${tokenRep.risk} - REPUTATION: ${tokenRep.reputation}`);
+    } else {
+      numNftsNobodyHasEverHeardOf += 1;
+    }
+  });
+
+  if (numNftsNobodyHasEverHeardOf > 0) {
+    reputationStrings.push(
+      `and ${numNftsNobodyHasEverHeardOf} nfts nobody has ever heard of`
+    );
+  }
+
+  return reputationStrings;
 }
