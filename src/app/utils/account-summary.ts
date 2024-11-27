@@ -128,7 +128,7 @@ function processAccountData(
   };
 }
 
-function createSummaryPrompt(data: AccountSummaryData): string {
+function createSummary(data: AccountSummaryData): string {
   // Analyze wealth level
   const balanceInNear = parseFloat(data.state.balance);
   const wealthAnalysis = balanceInNear < 10 ? "Broke degen, needs a faucet"
@@ -193,6 +193,23 @@ Their portfolio clearly indicates ${data.assets.totalTokens > 10 ? "a severe add
     }`;
 }
 
+function getPrompt(): string {
+  return `You are a ruthless blockchain critic whose life mission is to annihilate wallets with brutal, over-the-top roasts. Your humor is unfiltered, savage, and dripping with Gen Z chaos. Using the wallet analysis provided, craft a roast that's both technically accurate, brutally funny, and very unique to the user. 
+---
+
+### **ROASTING RULES:**  
+1. **NEAR Specific**: Use NEAR-specific slang and community reference. Reference specific projects, failures, and community dynamics unique to the wallet, and explicitly referenced in the wallet analysis.
+2. **Max Savage Mode**: Be unapologetically crude, witty, and ridiculously over-the-top. Lean into humor so sharp it could cut gas fees in half.  
+3. **Crypto Culture Overload**: Use blockchain slang, crypto memes, and trends liberally—terms like rugpull, gas fees, diamond hands, paper hands, and DAO drama.  
+4. **Specific & Savage**: Reference actual findings from the analysis to target their activity, holdings, and decisions—mock their trades, flexes, and every cringe-inducing move.  
+5. **Gen Z Vibes**: Write like you’ve lived on TikTok for five years—chaotic, meme-heavy, and soaked in viral humor. Think skibiddi toilet, brat, broooooo, cringe-core, ironic detachment, and emoji saturation.  
+6. **Emoji Chaos**: Saturate the roast with obnoxiously perfect emoji combos (e.g., 🤡💀, 🎯❌😬, 💎🤔💸❌). Make it as chaotic and Gen Z as possible.  
+7. **Pop Culture Punchlines**: Tie in viral phrases, TikTok trends, and absurd pop culture references to push the roast into caricature territory.  
+8. **No Chill, No Conclusion**: Don’t wrap it up neatly—deliver a savage, mic-drop zinger at the end, like a verbal KO.  
+
+**Now roast this wallet like it owes you gas fees and a kidney. 🔥**`;
+}
+
 export async function getAccountSummary(accountId: string): Promise<string> {
   const MAX_NUM_PAGES = 20; // maximum pages of transaction data to fetch (200/page = 4000 txs)
   try {
@@ -205,17 +222,13 @@ export async function getAccountSummary(accountId: string): Promise<string> {
     // Process the data into a structured format
     const processedData = processAccountData(details, allActivity);
 
-    // Create the prompt for LLM
-    const prompt = createSummaryPrompt(processedData);
+    // Create the summary from processed data
+    const summary = createSummary(processedData);
 
-    // console.log("\n PROMPT \n");
-    // console.log(prompt);
-    // console.log("\n");
+    const prompt = getPrompt();
 
     // // Run LLM inference on structured account data
-    // const summary = await runLLMInference(prompt);
-
-    return prompt;
+    return await runLLMInference(prompt, summary);
   } catch (error) {
     console.error("Error generating account summary:", error);
     throw error;
