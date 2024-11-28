@@ -6,7 +6,7 @@ import {
   getFullAccountDetails,
   RecentTransaction,
   TokenContract,
-  Transaction
+  Transaction,
 } from "../lib/fastnear";
 import { runLLMInference } from "../lib/open-ai";
 import {
@@ -33,8 +33,8 @@ interface AccountSummaryData {
     uniqueInteractions: Interaction[];
   };
   analysis: {
-    tokenHoldings: string[],
-    nftHoldings: string[]
+    tokenHoldings: string[];
+    nftHoldings: string[];
     interactionPatterns: Record<string, string>;
   };
   staking: {
@@ -51,33 +51,45 @@ function formatTimestamp(timestamp: number): string {
   return new Date(timestamp / 1000000).toISOString();
 }
 
-function getUniqueAddresses(transactions: Transaction[], recentTransactions: RecentTransaction[]): Interaction[] {
+function getUniqueAddresses(
+  transactions: Transaction[],
+  recentTransactions: RecentTransaction[],
+): Interaction[] {
   const addressCounts = new Map<string, number>();
 
   // Count both signer_id and account_id interactions
-  transactions.forEach(tx => {
+  transactions.forEach((tx) => {
     // Count signer_id
     addressCounts.set(tx.signer_id, (addressCounts.get(tx.signer_id) || 0) + 1);
 
     // Count account_id if it's different from signer_id
     if (tx.account_id !== tx.signer_id) {
-      addressCounts.set(tx.account_id, (addressCounts.get(tx.account_id) || 0) + 1);
+      addressCounts.set(
+        tx.account_id,
+        (addressCounts.get(tx.account_id) || 0) + 1,
+      );
     }
   });
 
-  recentTransactions.forEach(tx => {
+  recentTransactions.forEach((tx) => {
     // Count signer_id
-    addressCounts.set(tx.transaction.signer_id, (addressCounts.get(tx.transaction.signer_id) || 0) + 1);
+    addressCounts.set(
+      tx.transaction.signer_id,
+      (addressCounts.get(tx.transaction.signer_id) || 0) + 1,
+    );
 
     // Count receiver_id if it's different from signer_id
     if (tx.transaction.receiver_id !== tx.transaction.signer_id) {
-      addressCounts.set(tx.transaction.receiver_id, (addressCounts.get(tx.transaction.receiver_id) || 0) + 1);
+      addressCounts.set(
+        tx.transaction.receiver_id,
+        (addressCounts.get(tx.transaction.receiver_id) || 0) + 1,
+      );
     }
   });
 
   return Array.from(addressCounts.entries()).map(([address, count]) => ({
     contract_id: address,
-    count
+    count,
   }));
 }
 
@@ -93,11 +105,12 @@ function processAccountData(
 
   // Process unique interactions from transactions
   const uniqueInteractions = getUniqueAddresses(
-    allTransactions, recentTransactions
+    allTransactions,
+    recentTransactions,
   );
 
   const tokenAnalysis = analyzeTokenHoldings(details.tokens);
-  const nftAnalysis = analyzeNftHoldings(details.nfts)
+  const nftAnalysis = analyzeNftHoldings(details.nfts);
   const patterns = analyzeInteractionPatterns(uniqueInteractions);
 
   return {
@@ -131,28 +144,37 @@ function processAccountData(
 function createSummary(data: AccountSummaryData): string {
   // Analyze wealth level
   const balanceInNear = parseFloat(data.state.balance);
-  const wealthAnalysis = balanceInNear < 10 ? "Broke degen, needs a faucet"
-    : balanceInNear < 100 ? "calls themselves a NEAR OG but can't afford gas fees"
-      : balanceInNear < 1000 ? "medium balance energy, definitely lost it all on ref finance"
-        : "whale alert 🚨 (in their dreams)";
+  const wealthAnalysis =
+    balanceInNear < 10
+      ? "Broke degen, needs a faucet"
+      : balanceInNear < 100
+        ? "calls themselves a NEAR OG but can't afford gas fees"
+        : balanceInNear < 1000
+          ? "medium balance energy, definitely lost it all on ref finance"
+          : "whale alert 🚨 (in their dreams)";
 
   // Format transaction analysis
   const txCount = data.activity.totalTransactions;
-  const activityLevel = txCount < 50 ? "Barely uses their wallet"
-    : txCount < 200 ? "Regular degen"
-      : txCount < 3000 ? "No-life degen"
-        : "Terminal blockchain addiction";
+  const activityLevel =
+    txCount < 50
+      ? "Barely uses their wallet"
+      : txCount < 200
+        ? "Regular degen"
+        : txCount < 3000
+          ? "No-life degen"
+          : "Terminal blockchain addiction";
 
   // Format interaction analysis with reputations
   const interactionSummary = data.activity.uniqueInteractions
-    .map(interaction => {
-      const reputation = data.analysis.interactionPatterns[interaction.contract_id];
+    .map((interaction) => {
+      const reputation =
+        data.analysis.interactionPatterns[interaction.contract_id];
       if (reputation) {
         return `- ${interaction.count}x with ${interaction.contract_id}: REPUTATION: ${reputation}`;
       }
       return `- ${interaction.count}x with ${interaction.contract_id}`;
     })
-    .join('\n');
+    .join("\n");
 
   return `🔍 On-Chain Analysis of ${data.account_id}
 
@@ -162,10 +184,10 @@ function createSummary(data: AccountSummaryData): string {
 
 🏦 PORTFOLIO ANALYSIS:
 Token Holdings (${data.assets.totalTokens} total):
-${data.analysis.tokenHoldings.join('\n')}
+${data.analysis.tokenHoldings.join("\n")}
 
 NFT Collection (${data.assets.totalNFTs} total):
-${data.analysis.nftHoldings.join('\n')}
+${data.analysis.nftHoldings.join("\n")}
 
 📊 BEHAVIOR ANALYSIS:
 Activity Level: ${activityLevel}
@@ -176,21 +198,30 @@ Notable Interactions:
 ${interactionSummary}
 
 🥩 STAKING BEHAVIOR:
-${data.staking.pools.length === 0
-      ? "Not staking anything, certified paper hands"
-      : `Staking in ${data.staking.pools.length} pools: ${data.staking.pools.join(', ')}`}
+${
+  data.staking.pools.length === 0
+    ? "Not staking anything, certified paper hands"
+    : `Staking in ${data.staking.pools.length} pools: ${data.staking.pools.join(", ")}`
+}
 
 🎯 ANALYSIS SUMMARY:
-This account shows all the classic signs of ${txCount > 1000 ? "a terminally online degen"
-      : txCount > 500 ? "someone who needs to touch grass"
-        : txCount > 100 ? "your average NEAR user"
+This account shows all the classic signs of ${
+    txCount > 1000
+      ? "a terminally online degen"
+      : txCount > 500
+        ? "someone who needs to touch grass"
+        : txCount > 100
+          ? "your average NEAR user"
           : "a blockchain tourist"
-    }
+  }
 
-Their portfolio clearly indicates ${data.assets.totalTokens > 10 ? "a severe addiction to shitcoins"
-      : data.assets.totalTokens > 5 ? "an aspiring shitcoin collector"
+Their portfolio clearly indicates ${
+    data.assets.totalTokens > 10
+      ? "a severe addiction to shitcoins"
+      : data.assets.totalTokens > 5
+        ? "an aspiring shitcoin collector"
         : "someone who hasn't discovered meme tokens yet"
-    }`;
+  }`;
 }
 
 function getPrompt(): string {

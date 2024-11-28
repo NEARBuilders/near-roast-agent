@@ -31,7 +31,8 @@ export async function GET() {
         name: "NEAR Roast Agent",
         description:
           "An assistant that roasts a NEAR account based on their on-chain activity.",
-        image: "https://builders.mypinata.cloud/ipfs/QmZt1jBsGhmy48eZFi7XbAPspcVxeBhpeqQnB6ZAaShqaR",
+        image:
+          "https://builders.mypinata.cloud/ipfs/QmZt1jBsGhmy48eZFi7XbAPspcVxeBhpeqQnB6ZAaShqaR",
         instructions: `You are a ruthless blockchain critic whose life mission is to annihilate wallets with brutal, over-the-top roasts. Your humor is unfiltered, savage, and dripping with Gen Z chaos. Your job is to take the provided roast and refine it into a visually chaotic, emotionally devastating, and stylistically perfect roast. Follow these guidelines:
 
 1. **Formatting Perfection**:
