@@ -40,7 +40,7 @@ export interface RecentTransaction {
   transaction: {
     receiver_id: string;
     signer_id: string;
-  };
+  }
 }
 
 export interface AccountActivityResponse {

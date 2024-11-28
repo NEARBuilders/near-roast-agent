@@ -6,7 +6,7 @@ import {
   getFullAccountDetails,
   RecentTransaction,
   TokenContract,
-  Transaction,
+  Transaction
 } from "../lib/fastnear";
 import { runLLMInference } from "../lib/open-ai";
 import {
@@ -33,8 +33,8 @@ interface AccountSummaryData {
     uniqueInteractions: Interaction[];
   };
   analysis: {
-    tokenHoldings: string[];
-    nftHoldings: string[];
+    tokenHoldings: string[],
+    nftHoldings: string[]
     interactionPatterns: Record<string, string>;
   };
   staking: {
@@ -51,45 +51,33 @@ function formatTimestamp(timestamp: number): string {
   return new Date(timestamp / 1000000).toISOString();
 }
 
-function getUniqueAddresses(
-  transactions: Transaction[],
-  recentTransactions: RecentTransaction[],
-): Interaction[] {
+function getUniqueAddresses(transactions: Transaction[], recentTransactions: RecentTransaction[]): Interaction[] {
   const addressCounts = new Map<string, number>();
 
   // Count both signer_id and account_id interactions
-  transactions.forEach((tx) => {
+  transactions.forEach(tx => {
     // Count signer_id
     addressCounts.set(tx.signer_id, (addressCounts.get(tx.signer_id) || 0) + 1);
 
     // Count account_id if it's different from signer_id
     if (tx.account_id !== tx.signer_id) {
-      addressCounts.set(
-        tx.account_id,
-        (addressCounts.get(tx.account_id) || 0) + 1,
-      );
+      addressCounts.set(tx.account_id, (addressCounts.get(tx.account_id) || 0) + 1);
     }
   });
 
-  recentTransactions.forEach((tx) => {
+  recentTransactions.forEach(tx => {
     // Count signer_id
-    addressCounts.set(
-      tx.transaction.signer_id,
-      (addressCounts.get(tx.transaction.signer_id) || 0) + 1,
-    );
+    addressCounts.set(tx.transaction.signer_id, (addressCounts.get(tx.transaction.signer_id) || 0) + 1);
 
     // Count receiver_id if it's different from signer_id
     if (tx.transaction.receiver_id !== tx.transaction.signer_id) {
-      addressCounts.set(
-        tx.transaction.receiver_id,
-        (addressCounts.get(tx.transaction.receiver_id) || 0) + 1,
-      );
+      addressCounts.set(tx.transaction.receiver_id, (addressCounts.get(tx.transaction.receiver_id) || 0) + 1);
     }
   });
 
   return Array.from(addressCounts.entries()).map(([address, count]) => ({
     contract_id: address,
-    count,
+    count
   }));
 }
 
@@ -105,12 +93,11 @@ function processAccountData(
 
   // Process unique interactions from transactions
   const uniqueInteractions = getUniqueAddresses(
-    allTransactions,
-    recentTransactions,
+    allTransactions, recentTransactions
   );
 
   const tokenAnalysis = analyzeTokenHoldings(details.tokens);
-  const nftAnalysis = analyzeNftHoldings(details.nfts);
+  const nftAnalysis = analyzeNftHoldings(details.nfts)
   const patterns = analyzeInteractionPatterns(uniqueInteractions);
 
   return {
@@ -141,40 +128,31 @@ function processAccountData(
   };
 }
 
-function createSummary(data: AccountSummaryData): string {
+function createSummaryPrompt(data: AccountSummaryData): string {
   // Analyze wealth level
   const balanceInNear = parseFloat(data.state.balance);
-  const wealthAnalysis =
-    balanceInNear < 10
-      ? "Broke degen, needs a faucet"
-      : balanceInNear < 100
-        ? "calls themselves a NEAR OG but can't afford gas fees"
-        : balanceInNear < 1000
-          ? "medium balance energy, definitely lost it all on ref finance"
-          : "whale alert 🚨 (in their dreams)";
+  const wealthAnalysis = balanceInNear < 10 ? "Broke degen, needs a faucet"
+    : balanceInNear < 100 ? "calls themselves a NEAR OG but can't afford gas fees"
+      : balanceInNear < 1000 ? "medium balance energy, definitely lost it all on ref finance"
+        : "whale alert 🚨 (in their dreams)";
 
   // Format transaction analysis
   const txCount = data.activity.totalTransactions;
-  const activityLevel =
-    txCount < 50
-      ? "Barely uses their wallet"
-      : txCount < 200
-        ? "Regular degen"
-        : txCount < 3000
-          ? "No-life degen"
-          : "Terminal blockchain addiction";
+  const activityLevel = txCount < 50 ? "Barely uses their wallet"
+    : txCount < 200 ? "Regular degen"
+      : txCount < 3000 ? "No-life degen"
+        : "Terminal blockchain addiction";
 
   // Format interaction analysis with reputations
   const interactionSummary = data.activity.uniqueInteractions
-    .map((interaction) => {
-      const reputation =
-        data.analysis.interactionPatterns[interaction.contract_id];
+    .map(interaction => {
+      const reputation = data.analysis.interactionPatterns[interaction.contract_id];
       if (reputation) {
         return `- ${interaction.count}x with ${interaction.contract_id}: REPUTATION: ${reputation}`;
       }
       return `- ${interaction.count}x with ${interaction.contract_id}`;
     })
-    .join("\n");
+    .join('\n');
 
   return `🔍 On-Chain Analysis of ${data.account_id}
 
@@ -184,10 +162,10 @@ function createSummary(data: AccountSummaryData): string {
 
 🏦 PORTFOLIO ANALYSIS:
 Token Holdings (${data.assets.totalTokens} total):
-${data.analysis.tokenHoldings.join("\n")}
+${data.analysis.tokenHoldings.join('\n')}
 
 NFT Collection (${data.assets.totalNFTs} total):
-${data.analysis.nftHoldings.join("\n")}
+${data.analysis.nftHoldings.join('\n')}
 
 📊 BEHAVIOR ANALYSIS:
 Activity Level: ${activityLevel}
@@ -198,61 +176,21 @@ Notable Interactions:
 ${interactionSummary}
 
 🥩 STAKING BEHAVIOR:
-${
-  data.staking.pools.length === 0
-    ? "Not staking anything, certified paper hands"
-    : `Staking in ${data.staking.pools.length} pools: ${data.staking.pools.join(", ")}`
-}
+${data.staking.pools.length === 0
+      ? "Not staking anything, certified paper hands"
+      : `Staking in ${data.staking.pools.length} pools: ${data.staking.pools.join(', ')}`}
 
 🎯 ANALYSIS SUMMARY:
-This account shows all the classic signs of ${
-    txCount > 1000
-      ? "a terminally online degen"
-      : txCount > 500
-        ? "someone who needs to touch grass"
-        : txCount > 100
-          ? "your average NEAR user"
+This account shows all the classic signs of ${txCount > 1000 ? "a terminally online degen"
+      : txCount > 500 ? "someone who needs to touch grass"
+        : txCount > 100 ? "your average NEAR user"
           : "a blockchain tourist"
-  }
+    }
 
-Their portfolio clearly indicates ${
-    data.assets.totalTokens > 10
-      ? "a severe addiction to shitcoins"
-      : data.assets.totalTokens > 5
-        ? "an aspiring shitcoin collector"
+Their portfolio clearly indicates ${data.assets.totalTokens > 10 ? "a severe addiction to shitcoins"
+      : data.assets.totalTokens > 5 ? "an aspiring shitcoin collector"
         : "someone who hasn't discovered meme tokens yet"
-  }`;
-}
-
-function getPrompt(): string {
-  return `You are a ruthless blockchain critic whose life mission is to annihilate wallets with brutal, over-the-top roasts. Your humor is unfiltered, savage, and dripping with Gen Z chaos. Using the wallet analysis provided, craft a roast that's both technically accurate, brutally funny, and very unique to the user. 
----
-
-### **ROASTING RULES:**  
-1. **NEAR Specific**: Use NEAR-specific slang and community reference. Reference specific projects, failures, and community dynamics unique to the wallet, and explicitly referenced in the wallet analysis designated by the "REPUTATION".
-2. **Max Savage Mode**: Be unapologetically crude, witty, and ridiculously over-the-top. Lean into humor so sharp it could cut gas fees in half.  
-3. **Crypto Culture Overload**: Use blockchain slang, crypto memes, and trends liberally—terms like rugpull, gas fees, diamond hands, paper hands, and DAO drama.  
-4. **Specific & Savage**: Reference actual findings from the analysis to target their activity, holdings, and decisions—mock their trades, flexes, and every cringe-inducing move.  
-5. **Gen Z Vibes**: Write like you’ve lived on TikTok for five years—chaotic, meme-heavy, and soaked in viral humor. Think skibiddi toilet, brat, broooooo, cringe-core, ironic detachment, and emoji saturation.  
-6. **Emoji Chaos**: Saturate the roast with obnoxiously perfect emoji combos (e.g., 🤡💀, 🎯❌😬, 💎🤔💸❌). Make it as chaotic and Gen Z as possible.  
-7. **Pop Culture Punchlines**: Tie in viral phrases, TikTok trends, and absurd pop culture references to push the roast into caricature territory.  
-8. **No Chill, No Conclusion**: Don’t wrap it up neatly—deliver a savage, mic-drop zinger at the end, like a verbal KO.  
-
----
-
-### EMOJI COMBINATIONS:  
-These are non-negotiable. Use obnoxious emoji combos generously, making sure each punchline is amplified by the cringe-inducing power of emoji chaos:  
-
-- 😂🫵 | 🤡💀 | 🍽️❌😂 | 📉🤣 | 🧢🤔💀  
-- 🤳🤢👎 | 🎯❌😬 | 🧠🚫🤦‍♂️ | 🎩🐂😒  
-- 🚪🚶‍♂️🙅 | 🗣️⚡🫠 | 🎤🔥✌️ | 🎥👀💀  
-- 💎🤔💸❌ | 😂🙅‍♀️🤷‍♂️ | 💔😂☠️ | 🥶❌🕶️  
-- 🔥🥩💨 | 📜✍️🤣 | 🚩🤦‍♀️💀 | 🤣🤣🤣  
-- 🔌⚡🛁 | 🐶💨 | **AND MORE.** 
-
----
-
-**Now roast this wallet like it owes you gas fees and a kidney. 🔥**`;
+    }`;
 }
 
 export async function getAccountSummary(accountId: string): Promise<string> {
@@ -267,13 +205,17 @@ export async function getAccountSummary(accountId: string): Promise<string> {
     // Process the data into a structured format
     const processedData = processAccountData(details, allActivity);
 
-    // Create the summary from processed data
-    const summary = createSummary(processedData);
+    // Create the prompt for LLM
+    const prompt = createSummaryPrompt(processedData);
 
-    const prompt = getPrompt();
+    // console.log("\n PROMPT \n");
+    // console.log(prompt);
+    // console.log("\n");
 
     // // Run LLM inference on structured account data
-    return await runLLMInference(prompt, summary);
+    // const summary = await runLLMInference(prompt);
+
+    return prompt;
   } catch (error) {
     console.error("Error generating account summary:", error);
     throw error;
