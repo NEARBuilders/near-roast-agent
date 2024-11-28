@@ -7,7 +7,7 @@ const openai = new OpenAI({
 export async function runLLMInference(prompt: string, summary: string): Promise<string> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // should we use a better model?
+      model: "gpt-4-turbo",
       messages: [
         {
           role: "system",
@@ -18,7 +18,7 @@ export async function runLLMInference(prompt: string, summary: string): Promise<
           content: summary,
         },
       ],
-      temperature: 0.8
+      temperature: 0.8 // be more creative
     });
 
     return response.choices[0].message.content || "No summary generated";
