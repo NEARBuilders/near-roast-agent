@@ -23,7 +23,6 @@
     ]
   },
   "devDependencies": {
-    "@types/big.js": "^6.2.2",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "concurrently": "^9.1.0",
@@ -37,9 +36,7 @@
   "dependencies": {
     "@elysiajs/swagger": "^1.0.5",
     "@near-js/client": "^0.0.2",
-    "big.js": "^6.2.1",
     "elysia": "^1.0.16",
-    "fuse.js": "^7.0.0",
     "make-agent": "^0.0.25-rc.1",
     "next": "14.2.16",
     "openai": "^4.72.0",

@@ -30,7 +30,7 @@
 ### Installing dependencies
 
 ```bash
-pnpm install
+bun install
 ```
 
 ### Running the app
@@ -38,19 +38,19 @@ pnpm install
 First, run the development server:
 
 ```bash
-pnpm run dev
+bun run dev
 ```
 
-### Building for production
+### Update Bitte agent in registry
 
 ```bash
-pnpm run build
+npx make-agent update -u https://near-roast-agent.vercel.app/
 ```
 
 ### Running tests
 
 ```bash
-pnpm run test
+bun run test
 ```
 
 See the full [testing guide](./playwright-tests/README.md).
