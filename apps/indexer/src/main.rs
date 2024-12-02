@@ -4,12 +4,15 @@ use inindexer::{
     near_utils::{MAINNET_GENESIS_BLOCK_HEIGHT},
     neardata::NeardataProvider,
     run_indexer, AutoContinue, BlockIterator, CompleteTransaction, Indexer,
-    IndexerOptions,
+    IndexerOptions, PreprocessTransactionsSettings
 };
 use near_indexer_primitives::{types::AccountId, StreamerMessage};
+use reqwest::Client;
+use serde_json::json;
 
 struct WatcherIndexer {
     tracked_account: AccountId,
+    http_client: Client,
 }
 
 #[async_trait]
@@ -21,12 +24,25 @@ impl Indexer for WatcherIndexer {
         transaction: &CompleteTransaction,
         _block: &StreamerMessage,
     ) -> Result<(), Self::Error> {
-        // Note: this is a simple example, which doesn't handle DELEGATE actions
-        if transaction.transaction.transaction.signer_id.to_string() == self.tracked_account {
+        if transaction.transaction.transaction.signer_id == self.tracked_account {
             log::info!(
                 "Found transaction: https://pikespeak.ai/transaction-viewer/{}",
                 transaction.transaction.transaction.hash
             );
+
+            // Call the ping endpoint
+            let response = self.http_client
+                .post("http://localhost:4555/ping")
+                .json(&json!({
+                    "message": format!("Transaction found: {}", transaction.transaction.transaction.hash)
+                }))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+
+            if !response.status().is_success() {
+                log::error!("Failed to ping API: {}", response.status());
+            }
         }
         Ok(())
     }
@@ -40,7 +56,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init()?;
 
     let mut indexer = WatcherIndexer {
-        tracked_account: "slimedragon.near".parse()?,
+        tracked_account: "efiz.near".parse()?,
+        http_client: Client::new(),
     };
 
     run_indexer(
@@ -53,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 end: inindexer::AutoContinueEnd::Infinite,
             }),
             stop_on_error: false,
-            preprocess_transactions: None,
+            preprocess_transactions: Some(PreprocessTransactionsSettings::default()),
             genesis_block_height: MAINNET_GENESIS_BLOCK_HEIGHT,
             ctrl_c_handler: true,
         },
