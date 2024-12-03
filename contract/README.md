@@ -35,3 +35,6 @@ cargo near deploy <account-id>
 - [NEAR Discord](https://near.chat)
 - [NEAR Telegram Developers Community Group](https://t.me/neardev)
 - NEAR DevHub: [Telegram](https://t.me/neardevhub), [Twitter](https://twitter.com/neardevhub)
+
+
+near contract call-function as-transaction v0.near-roasts.testnet request json-args '{"prompt": "whats a common greeting"}' prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' sign-as efiz.testnet network-config testnet sign-with-keychain send

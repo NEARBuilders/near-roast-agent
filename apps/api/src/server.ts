@@ -1,4 +1,5 @@
 import express from 'express';
+import { getRequest, getRequests, setResponse } from './lib/near-contract';
 // import { Worker, Queue } from 'bullmq';
 // import Redis from 'ioredis';
 // import { processRequest } from './processor.js';
@@ -30,6 +31,21 @@ app.post('/ping', (req, res) => {
   res.json({ message: req.body.message });
 });
 
+app.get('/v0/requests', async (_req, res) => {
+  const requests = await getRequests();
+  res.json({ requests });
+});
+
+app.post('/v0/process', async (req, res) => {
+  try {
+    const request = await getRequest(req.body.requestId);
+    await setResponse(request.yield_id, "yooooo");
+    res.status(200);
+  } catch (e) {
+    res.status(500);
+  }
+})
+
 // app.post('/process-request', async (req, res) => {
 //   try {
 //     const job = await requestQueue.add('process', {
@@ -37,7 +53,7 @@ app.post('/ping', (req, res) => {
 //       data: req.body.data,
 //       timestamp: Date.now(),
 //     });
-    
+
 //     res.json({ 
 //       status: 'queued',
 //       jobId: job.id

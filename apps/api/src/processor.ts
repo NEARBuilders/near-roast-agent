@@ -1,5 +1,3 @@
-import { near } from './near-config.js';
-
 // This is a placeholder function - implement your AI processing logic here
 async function processWithAI(data: any) {
   // Add your AI processing implementation

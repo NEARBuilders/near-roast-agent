@@ -1,5 +1,7 @@
 use near_sdk::store::IterableMap;
-use near_sdk::{env, near, serde_json, BorshStorageKey, CryptoHash, Gas, GasWeight, PromiseError};
+use near_sdk::{
+    env, near, serde_json, AccountId, BorshStorageKey, CryptoHash, Gas, GasWeight, PromiseError,
+};
 use serde_json::json;
 
 const YIELD_REGISTER: u64 = 0;
@@ -25,14 +27,12 @@ pub enum Response {
 
 #[near(contract_state)]
 pub struct Contract {
-    request_id: u32,
-    requests: IterableMap<u32, Request>,
+    requests: IterableMap<String, Request>,
 }
 
 impl Default for Contract {
     fn default() -> Self {
         Self {
-            request_id: 0,
             requests: IterableMap::new(Keys::Map),
         }
     }
@@ -41,15 +41,18 @@ impl Default for Contract {
 #[near]
 impl Contract {
     pub fn request(&mut self, prompt: String) {
-        // internal variable to keep track of the requests
-        self.request_id += 1;
+        // use the signer_id as the key
+        let signer_id = env::predecessor_account_id().to_string();
+
+        // check if signer already has a pending request
+        if self.requests.contains_key(&signer_id) {
+            env::panic_str("Request already in progress for this signer");
+        }
 
         // this will create a unique ID in the YIELD_REGISTER
         let yield_promise = env::promise_yield_create(
             "return_external_response",
-            &json!({ "request_id": self.request_id })
-                .to_string()
-                .into_bytes(),
+            &json!({ "signer_id": signer_id }).to_string().into_bytes(),
             Gas::from_tgas(5),
             GasWeight::default(),
             YIELD_REGISTER,
@@ -63,7 +66,7 @@ impl Contract {
 
         // store the request, so we can delete it later
         let request = Request { yield_id, prompt };
-        self.requests.insert(self.request_id, request);
+        self.requests.insert(signer_id, request);
 
         // return the yield promise
         env::promise_return(yield_promise);
@@ -74,13 +77,17 @@ impl Contract {
         env::promise_yield_resume(&yield_id, &serde_json::to_vec(&response).unwrap());
     }
 
+    pub fn get_request(&self, request_id: AccountId) -> Option<Request> {
+        self.requests.get(&request_id.to_string()).cloned()
+    }
+
     #[private]
     pub fn return_external_response(
         &mut self,
-        request_id: u32,
+        signer_id: AccountId,
         #[callback_result] response: Result<String, PromiseError>,
     ) -> Response {
-        self.requests.remove(&request_id);
+        self.requests.remove(&signer_id.to_string());
 
         match response {
             Ok(answer) => Response::Answer(answer),
