@@ -17,5 +17,8 @@
     "prettier": "^3.3.3",
     "turbo": "latest"
   },
-  "packageManager": "bun@1.0.26"
+  "packageManager": "bun@1.0.26",
+  "dependencies": {
+    "near-api-js": "^5.0.1"
+  }
 }

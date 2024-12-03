@@ -1,5 +1,6 @@
-import { getProviderByEndpoints, getSignerFromPrivateKey, SignedTransactionComposer, view } from "@near-js/client";
+import { getProviderByEndpoints, view } from "@near-js/client";
 import { KeyPairString } from '@near-js/crypto';
+import { Wallet } from "../near";
 
 // Default to testnet if not specified
 const NETWORK_ID = (process.env.NETWORK_ID || 'testnet') as 'testnet' | 'mainnet';
@@ -22,6 +23,17 @@ if (!RPC_ENDPOINTS[NETWORK_ID]) {
   throw new Error(`Invalid NETWORK_ID: ${NETWORK_ID}. Must be either 'testnet' or 'mainnet'`);
 }
 
+// Validate required environment variables for transaction signing
+if (!SIGNER_ID) {
+  throw new Error('SIGNER_ID environment variable is required for sending transactions');
+}
+if (!SIGNER_PRIVATE_KEY) {
+  throw new Error('SIGNER_PRIVATE_KEY environment variable is required for sending transactions');
+}
+
+const wallet = new Wallet({ networkId: NETWORK_ID, accountId: SIGNER_ID, privateKey: SIGNER_PRIVATE_KEY as KeyPairString });
+
+
 const rpcProvider = getProviderByEndpoints(...RPC_ENDPOINTS[NETWORK_ID]);
 
 interface Request {
@@ -31,7 +43,7 @@ interface Request {
 
 export async function getRequest(requestId: string): Promise<Request> {
   try {
-    return await view<Request>({
+    const request = await view<Request>({
       account: CONTRACT_ID,
       method: "get_request",
       args: {
@@ -39,6 +51,7 @@ export async function getRequest(requestId: string): Promise<Request> {
       },
       deps: { rpcProvider },
     });
+    return request;
   } catch (error: any) {
     throw new Error(`Failed to get request: ${error?.message || 'Unknown error'}`);
   }
@@ -56,30 +69,38 @@ export async function getRequests(): Promise<Request[]> {
   }
 }
 
-export async function setResponse(yieldId: string, response: string) {
-  // Validate required environment variables for transaction signing
-  if (!SIGNER_ID) {
-    throw new Error('SIGNER_ID environment variable is required for sending transactions');
-  }
-  if (!SIGNER_PRIVATE_KEY) {
-    throw new Error('SIGNER_PRIVATE_KEY environment variable is required for sending transactions');
-  }
+export async function setResponse(yieldId: any, response: string) {
+  console.log("gonna try and set a response")
 
   try {
-    const signer = getSignerFromPrivateKey(SIGNER_PRIVATE_KEY as KeyPairString);
-    const composer = SignedTransactionComposer.init({
-      sender: SIGNER_ID,
-      receiver: CONTRACT_ID,
-      deps: {
-        signer,
-        rpcProvider
+    await wallet.callMethod(
+      {
+        contractId: CONTRACT_ID,
+        method: 'respond',
+        args: {
+          yield_id: yieldId,
+          response,
+        },
       }
-    });
+    )
+    
+    // BELOW GAVE ISSUE WITH @NEAR-JS/CLIENT
 
-    await composer.functionCall("respond", {
-      yield_id: yieldId,
-      response
-    }).signAndSend();
+    // const signer = getSignerFromPrivateKey(SIGNER_PRIVATE_KEY as KeyPairString);
+
+    // const composer = TransactionComposer.init({
+    //   sender: SIGNER_ID,
+    //   receiver: CONTRACT_ID,
+    // });
+
+    // const transaction = composer.functionCall("respond", {
+    //   yield_id: yieldId,
+    //   response,
+    // }).toTransaction();
+
+    // console.log("have transaction, time to sign and send", transaction);
+
+    // return signAndSendTransaction({ transaction, deps: { signer, rpcProvider } });
   } catch (error: any) {
     throw new Error(`Failed to set response: ${error?.message || 'Unknown error'}`);
   }

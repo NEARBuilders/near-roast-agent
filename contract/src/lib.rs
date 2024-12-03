@@ -46,6 +46,7 @@ impl Contract {
 
         // check if signer already has a pending request
         if self.requests.contains_key(&signer_id) {
+            // TODO: the indexer will still pick it up
             env::panic_str("Request already in progress for this signer");
         }
 
@@ -100,5 +101,23 @@ impl Contract {
             .values()
             .map(|request| request.clone())
             .collect()
+    }
+
+    pub fn delete_request(&mut self, request_id: AccountId) -> String {
+        let request_key = request_id.to_string();
+        
+        // Check if the request exists
+        if !self.requests.contains_key(&request_key) {
+            return "Request not found".to_string();
+        }
+
+        // Check if caller has access (must be contract account)
+        if env::predecessor_account_id() != env::current_account_id() {
+            return "Calling account does not have access".to_string();
+        }
+
+        // Remove the request and return success
+        self.requests.remove(&request_key);
+        "Request successfully deleted".to_string()
     }
 }

@@ -4,8 +4,8 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "dev": "node ./dist/server.js",
-    "start": "tsc && npm run dev"
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
+    "start": "tsc && node ./dist/server.js"
   },
   "keywords": [],
   "author": "",

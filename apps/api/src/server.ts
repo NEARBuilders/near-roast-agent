@@ -38,11 +38,12 @@ app.get('/v0/requests', async (_req, res) => {
 
 app.post('/v0/process', async (req, res) => {
   try {
-    const request = await getRequest(req.body.requestId);
+    const request = await getRequest(req.body.signer_id);
+
     await setResponse(request.yield_id, "yooooo");
-    res.status(200);
+    res.status(200).send();
   } catch (e) {
-    res.status(500);
+    res.status(500).send();
   }
 })
 
