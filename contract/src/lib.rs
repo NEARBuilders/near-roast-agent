@@ -1,6 +1,6 @@
 use near_sdk::store::IterableMap;
 use near_sdk::{
-    env, near, serde_json, AccountId, BorshStorageKey, CryptoHash, Gas, GasWeight, PromiseError,
+    env, near, serde_json, BorshStorageKey, CryptoHash, Gas, GasWeight, PromiseError,
 };
 use serde_json::json;
 
@@ -50,10 +50,13 @@ impl Contract {
             env::panic_str("Request already in progress for this signer");
         }
 
+        // idk if signer is the best request key
+        let request_id = signer_id;
+
         // this will create a unique ID in the YIELD_REGISTER
         let yield_promise = env::promise_yield_create(
             "return_external_response",
-            &json!({ "signer_id": signer_id }).to_string().into_bytes(),
+            &json!({ "request_id": request_id }).to_string().into_bytes(),
             Gas::from_tgas(5),
             GasWeight::default(),
             YIELD_REGISTER,
@@ -67,28 +70,28 @@ impl Contract {
 
         // store the request, so we can delete it later
         let request = Request { yield_id, prompt };
-        self.requests.insert(signer_id, request);
+        self.requests.insert(request_id, request);
 
         // return the yield promise
         env::promise_return(yield_promise);
     }
 
-    pub fn respond(&mut self, yield_id: CryptoHash, response: String) {
+    pub fn respond(&mut self, yield_id: CryptoHash, response: String) { 
         // resume computation with the response
         env::promise_yield_resume(&yield_id, &serde_json::to_vec(&response).unwrap());
     }
 
-    pub fn get_request(&self, request_id: AccountId) -> Option<Request> {
+    pub fn get_request(&self, request_id: String) -> Option<Request> {
         self.requests.get(&request_id.to_string()).cloned()
     }
 
     #[private]
     pub fn return_external_response(
         &mut self,
-        signer_id: AccountId,
+        request_id: String,
         #[callback_result] response: Result<String, PromiseError>,
     ) -> Response {
-        self.requests.remove(&signer_id.to_string());
+        self.requests.remove(&request_id.to_string());
 
         match response {
             Ok(answer) => Response::Answer(answer),
@@ -103,11 +106,10 @@ impl Contract {
             .collect()
     }
 
-    pub fn delete_request(&mut self, request_id: AccountId) -> String {
-        let request_key = request_id.to_string();
-        
+    // requests delete on their own after a time-out, but if needed to kill early
+    pub fn delete_request(&mut self, request_id: String) -> String {
         // Check if the request exists
-        if !self.requests.contains_key(&request_key) {
+        if !self.requests.contains_key(&request_id) {
             return "Request not found".to_string();
         }
 
@@ -117,7 +119,7 @@ impl Contract {
         }
 
         // Remove the request and return success
-        self.requests.remove(&request_key);
+        self.requests.remove(&request_id);
         "Request successfully deleted".to_string()
     }
 }

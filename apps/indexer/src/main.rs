@@ -31,9 +31,8 @@ impl Indexer for WatcherIndexer {
                 transaction.transaction.hash
             );
 
-            // Call the ping endpoint
             let response = self.http_client
-                .post("http://localhost:4555/v0/process")
+                .post("http://localhost:4555/v0/process") 
                 .json(&json!({
                     "signer_id": transaction.transaction.signer_id,
                 }))

@@ -1,34 +1,34 @@
-// This is a placeholder function - implement your AI processing logic here
-async function processWithAI(data: any) {
-  // Add your AI processing implementation
-  return {
-    processed: true,
-    data: data,
-    timestamp: Date.now()
-  };
-}
+import { ApiResponse, doSomething } from "./lib/api-sdk";
+import { ContractRequest, setResponse } from "./lib/contract-sdk";
 
-// This is a placeholder function - implement your contract submission logic here
-async function submitToContract(aiResponse: any) {
-  // Add your contract submission implementation
-  return {
-    success: true,
-    response: aiResponse,
-    timestamp: Date.now()
-  };
-}
+// Request processing, put on queue by the indexer (~/apps/indexer)
+export function processRequest(requestId: string, request: ContractRequest) {
+  const { data } = request;
+  // what schema does request data follow?
+  // validate
+  // what schema does api accept?
+  // transform
+  const requestData = JSON.parse(data);
 
-export async function processRequest(data: any) {
   try {
-    // Process with AI
-    const aiResponse = await processWithAI(data);
-    
-    // Submit to smart contract
-    const response = await submitToContract(aiResponse);
-    
-    return response;
+    // doSomething can come from federated module
+    const action: Promise<ApiResponse> = doSomething({ requestId, data: requestData });
+
+    action.then((response) => {
+      // Submit to end queue
+      submitResponse(request, response);
+    })
+
   } catch (error) {
     console.error('Processing error:', error);
     throw error;
   }
+}
+
+// Submits response to contract
+async function submitResponse(request: ContractRequest, response: ApiResponse) {
+  const { requestId, data } = response;
+  const responseData = JSON.stringify(data);
+
+  setResponse(request.yield_id, { request_id: requestId, data: responseData });
 }

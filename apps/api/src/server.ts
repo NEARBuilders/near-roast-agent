@@ -1,5 +1,40 @@
 import express from 'express';
-import { getRequest, getRequests, setResponse } from './lib/near-contract';
+import { getRequest, getRequests } from './lib/contract-sdk';
+import { processRequest } from './processor';
+
+const app = express();
+app.use(express.json());
+
+app.post('/ping', (req, res) => {
+  console.log("PONG, ", req.body.message);
+  res.json({ message: req.body.message });
+});
+
+/**
+ * Gets requests from contract, used as a helper function to view pending requests
+ */
+app.get('/v0/requests', async (_req, res) => {
+  const requests = await getRequests();
+  res.json({ requests });
+});
+
+/**
+ * Initiates processing 
+ */
+app.post('/v0/process', async (req, res) => {
+  try {
+    const requestId = req.body.request_id;
+    const request = await getRequest(requestId); // get from contract
+
+    // put a request on the queue (todo)
+    processRequest(requestId, request);
+
+    res.status(200).send();
+  } catch (e) {
+    res.status(500).send();
+  }
+})
+
 // import { Worker, Queue } from 'bullmq';
 // import Redis from 'ioredis';
 // import { processRequest } from './processor.js';
@@ -21,31 +56,6 @@ import { getRequest, getRequests, setResponse } from './lib/near-contract';
 //     },
 //   },
 // });
-
-// API routes
-const app = express();
-app.use(express.json());
-
-app.post('/ping', (req, res) => {
-  console.log("PONG, ", req.body.message);
-  res.json({ message: req.body.message });
-});
-
-app.get('/v0/requests', async (_req, res) => {
-  const requests = await getRequests();
-  res.json({ requests });
-});
-
-app.post('/v0/process', async (req, res) => {
-  try {
-    const request = await getRequest(req.body.signer_id);
-
-    await setResponse(request.yield_id, "yooooo");
-    res.status(200).send();
-  } catch (e) {
-    res.status(500).send();
-  }
-})
 
 // app.post('/process-request', async (req, res) => {
 //   try {
