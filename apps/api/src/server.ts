@@ -19,84 +19,30 @@ app.get('/v0/requests', async (_req, res) => {
 });
 
 /**
- * Initiates processing 
+ * Initiates processing for a request
  */
 app.post('/v0/process', async (req, res) => {
   try {
     const requestId = req.body.request_id;
+
+    console.log(`Received request to process: ${requestId}`);
+
     const request = await getRequest(requestId); // get from contract
+
+    if (!request) {
+      console.error(`Request not found: ${requestId}`);
+      return res.status(404).send({ error: "Request not found" });
+    }
 
     // put a request on the queue (todo)
     processRequest(requestId, request);
 
-    res.status(200).send();
+    res.status(200).send(); // ack
   } catch (e) {
-    res.status(500).send();
+    console.error("Error processing request:", e);
+    res.status(500).send({ error: "Internal server error" });
   }
 })
-
-// import { Worker, Queue } from 'bullmq';
-// import Redis from 'ioredis';
-// import { processRequest } from './processor.js';
-
-// Redis connection for queue management
-// const redis = new Redis({
-//   host: process.env.REDIS_HOST || 'localhost',
-//   port: Number(process.env.REDIS_PORT) || 6379,
-// });
-
-// // Create request queue
-// const requestQueue = new Queue('contract-requests', {
-//   connection: redis,
-//   defaultJobOptions: {
-//     attempts: 3,
-//     backoff: {
-//       type: 'exponential',
-//       delay: 1000,
-//     },
-//   },
-// });
-
-// app.post('/process-request', async (req, res) => {
-//   try {
-//     const job = await requestQueue.add('process', {
-//       transactionHash: req.body.transactionHash,
-//       data: req.body.data,
-//       timestamp: Date.now(),
-//     });
-
-//     res.json({ 
-//       status: 'queued',
-//       jobId: job.id
-//     });
-//   } catch (error: any) {
-//     res.status(500).json({ error: error.message });
-//   }
-// });
-
-// // Start multiple workers to process requests
-// const WORKER_COUNT = 5;
-// const workers: Worker[] = [];
-
-// for (let i = 0; i < WORKER_COUNT; i++) {
-//   const worker = new Worker('contract-requests', async (job) => {
-//     const result = await processRequest(job.data);
-//     return result;
-//   }, {
-//     connection: redis,
-//     concurrency: 3, // Each worker can process 3 jobs concurrently
-//   });
-
-//   worker.on('completed', (job) => {
-//     console.log(`Job ${job.id} completed`);
-//   });
-
-//   worker.on('failed', (job, error) => {
-//     console.error(`Job ${job?.id} failed:`, error);
-//   });
-
-//   workers.push(worker);
-// }
 
 const PORT = process.env.PORT || 4555;
 app.listen(PORT, () => {
@@ -106,8 +52,5 @@ app.listen(PORT, () => {
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('Shutting down...');
-  // await Promise.all(workers.map(worker => worker.close()));
-  // await requestQueue.close();
-  // await redis.quit();
   process.exit(0);
 });

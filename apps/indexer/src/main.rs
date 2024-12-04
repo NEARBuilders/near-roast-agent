@@ -1,10 +1,11 @@
 use std::path::PathBuf;
 use async_trait::async_trait;
+use tokio::spawn;
 use inindexer::{
     near_utils::{TESTNET_GENESIS_BLOCK_HEIGHT},
     neardata::NeardataProvider,
     run_indexer, AutoContinue, BlockIterator, Indexer,
-    IndexerOptions, PreprocessTransactionsSettings
+    IndexerOptions
 };
 use near_indexer_primitives::{types::AccountId, StreamerMessage, IndexerTransactionWithOutcome};
 use reqwest::Client;
@@ -14,6 +15,10 @@ struct WatcherIndexer {
     tracked_account: AccountId,
     http_client: Client,
 }
+
+static TRACKED_ACCOUNT: &str = "v0.near-roasts.testnet";
+static RESPONDER_ACCOUNT: &str = "roast-daddy.near-roasts.testnet";
+static API_URL: &str = "http://localhost:4555/v0/process";
 
 #[async_trait]
 impl Indexer for WatcherIndexer {
@@ -25,26 +30,32 @@ impl Indexer for WatcherIndexer {
         _block: &StreamerMessage,
     ) -> Result<(), Self::Error> {
         // watching for calls to the yield-resume contract
-        if transaction.transaction.receiver_id == self.tracked_account {
+        let is_tracked_account = transaction.transaction.receiver_id == self.tracked_account; // target contract
+        let is_not_responder_account = transaction.transaction.signer_id != RESPONDER_ACCOUNT; // calls respond on contract from api
+
+        if is_not_responder_account && is_tracked_account {
             log::info!(
                 "Found transaction: https://testnet.nearblocks.io/txns/{}",
                 transaction.transaction.hash
             );
+            let http_client = self.http_client.clone();
+            let request_id = transaction.transaction.signer_id.clone();
 
-            let response = self.http_client
-                .post("http://localhost:4555/v0/process") 
-                .json(&json!({
-                    "signer_id": transaction.transaction.signer_id,
-                }))
-                .send()
-                .await
-                .map_err(|e| e.to_string())?;
-
-            if !response.status().is_success() {
-                log::error!("Failed to process for signer: {}", transaction.transaction.signer_id);
-            }
+            // spawn a new asynchronous task to send the HTTP request
+            spawn(async move {
+                if let Err(e) = http_client
+                    .post(API_URL)
+                    .json(&json!({
+                        "request_id": request_id,
+                    }))
+                    .send()
+                    .await
+                {
+                    log::error!("Failed to send request {} to processing server: {}", request_id, e);
+                }
+            });
         }
-        Ok(())
+        Ok(()) // continue running indexer
     }
 }
 
@@ -56,8 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init()?;
 
     let mut indexer = WatcherIndexer {
-        // tracked_account: "efiz.near".parse()?,
-        tracked_account: "v0.near-roasts.testnet".parse()?,
+        tracked_account: TRACKED_ACCOUNT.parse()?,
         http_client: Client::new(),
     };
 
@@ -75,7 +85,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 end: inindexer::AutoContinueEnd::Infinite,
             }),
             stop_on_error: false,
-            preprocess_transactions: Some(PreprocessTransactionsSettings::default()),
+            preprocess_transactions: None,
             // genesis_block_height: MAINNET_GENESIS_BLOCK_HEIGHT,
             genesis_block_height: TESTNET_GENESIS_BLOCK_HEIGHT,
             ctrl_c_handler: true,

@@ -3,16 +3,9 @@ import { ContractRequest, setResponse } from "./lib/contract-sdk";
 
 // Request processing, put on queue by the indexer (~/apps/indexer)
 export function processRequest(requestId: string, request: ContractRequest) {
-  const { data } = request;
-  // what schema does request data follow?
-  // validate
-  // what schema does api accept?
-  // transform
-  const requestData = JSON.parse(data);
-
   try {
     // doSomething can come from federated module
-    const action: Promise<ApiResponse> = doSomething({ requestId, data: requestData });
+    const action: Promise<ApiResponse> = doSomething({ requestId, data: request });
 
     action.then((response) => {
       // Submit to end queue
@@ -28,7 +21,6 @@ export function processRequest(requestId: string, request: ContractRequest) {
 // Submits response to contract
 async function submitResponse(request: ContractRequest, response: ApiResponse) {
   const { requestId, data } = response;
-  const responseData = JSON.stringify(data);
-
-  setResponse(request.yield_id, { request_id: requestId, data: responseData });
+  console.log("Submitting a response for:", requestId);
+  setResponse({ yield_id: request.yield_id, ...data });
 }

@@ -9,13 +9,13 @@ const DEFAULT_CONTRACT_ID = 'v0.near-roasts.testnet';
 const CONTRACT_ID = process.env.CONTRACT_ID || DEFAULT_CONTRACT_ID;
 
 export interface ContractRequest { // This should match the Rust contract Request type
-  yield_id: any,
-  data: string // JSON stringified ApiRequest
+  yield_id: Uint8Array,
+  prompt: string
 }
 
-export interface ContractResponse { // Should match contract Response type
-  request_id: any,
-  data: string // JSON stringified ApiResponse
+export interface ContractResponse { 
+  yield_id: Uint8Array,
+  answer: string
 }
 
 /**
@@ -66,18 +66,17 @@ export async function getRequests(): Promise<ContractRequest[]> {
  * Sets a response for the yielded promise
  * 
  * Used after processing the request, in order to "resume" the yielded
- * 
  */
-export async function setResponse(yieldId: any, response: ContractResponse) { // what's best way to communicate with a contract?
+export async function setResponse(response: ContractResponse) {
   try {
     await wallet.callMethod(
       {
         contractId: CONTRACT_ID,
         method: 'respond',
         args: {
-          yield_id: yieldId,
-          response,
-        },
+          yield_id: response.yield_id,
+          response: response.answer
+        }
       }
     )
   } catch (error: any) {

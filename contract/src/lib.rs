@@ -46,7 +46,6 @@ impl Contract {
 
         // check if signer already has a pending request
         if self.requests.contains_key(&signer_id) {
-            // TODO: the indexer will still pick it up
             env::panic_str("Request already in progress for this signer");
         }
 
@@ -99,6 +98,7 @@ impl Contract {
         }
     }
 
+    // helper function, lists pending requests
     pub fn list_requests(&self) -> Vec<Request> {
         self.requests
             .values()
