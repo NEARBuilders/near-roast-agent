@@ -1,0 +1,44 @@
+{
+  "name": "@near-roasts/agent",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"next dev\" \"make-agent dev\"",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@elysiajs/swagger": "^1.0.5",
+    "@near-js/client": "^0.0.2",
+    "elysia": "^1.0.16",
+    "make-agent": "^0.0.25-rc.1",
+    "next": "14.2.16",
+    "openai": "^4.72.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "vercel-url": "^0.2.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "concurrently": "^9.1.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}

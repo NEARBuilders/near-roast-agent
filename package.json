@@ -1,5 +1,5 @@
 {
-  "name": "near-roast-agent",
+  "name": "near-roasts",
   "version": "0.0.1",
   "private": true,
   "workspaces": [
@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter '!@near-roasts/agent'",
     "lint": "turbo run lint",
     "fmt": "prettier --write '**/*.{js,jsx,ts,tsx,json}'",
     "fmt:check": "prettier --check '**/*.{js,jsx,ts,tsx,json}'",
