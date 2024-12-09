@@ -9,6 +9,9 @@ type CacheEntry = {
   timestamp: number;
 };
 
+export const maxDuration = 60; // 60 seconds, config for timeout
+export const dynamic = 'force-dynamic';
+
 const cache = new Map<string, CacheEntry>();
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
