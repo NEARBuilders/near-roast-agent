@@ -36,6 +36,8 @@ const app = new Elysia({ prefix: "/api", aot: false })
         console.log("generating roast...");
         roast = await generateRoast(summary);
 
+        console.log("generated roast.")
+
         // Store in memory cache
         cache.set(cacheKey, {
           roast,
