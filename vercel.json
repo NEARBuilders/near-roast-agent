@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/roast": {
+    "app/api/roast": {
       "maxDuration": 60
     }
   }
