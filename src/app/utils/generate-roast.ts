@@ -31,7 +31,6 @@ These are non-negotiable. Use obnoxious emoji combos generously, making sure eac
 **Now roast this wallet like it owes you gas fees and a kidney. 🔥**`;
 }
 
-
 export async function generateRoast(summary: string): Promise<string> {
   try {
     const prompt = getPrompt(); // roast prompt
