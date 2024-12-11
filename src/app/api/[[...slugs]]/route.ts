@@ -1,3 +1,4 @@
+import { sendThreadedTweet } from "@/app/lib/twitter";
 import { getAccountSummary } from "@/app/utils/account-summary";
 import { generateRoast } from "@/app/utils/generate-roast";
 import { isValidNearAccount } from "@/app/utils/validate";
@@ -39,7 +40,9 @@ const app = new Elysia({ prefix: "/api", aot: false })
         console.log("generating roast...");
         roast = await generateRoast(summary);
 
-        console.log("generated roast.")
+        console.log("generated roast. sending tweet...")
+
+        await sendThreadedTweet(roast);
 
         // Store in memory cache
         cache.set(cacheKey, {
