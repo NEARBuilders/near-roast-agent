@@ -34,7 +34,7 @@ Create a savage roast that:
      🔌⚡🛁 | 🐶💨 | **AND MORE.** 
 - References ONLY the top 2 most frequent activities/holdings
 - Uses Gen Z slang + NEAR-specific references
-- Ends with a brutal mic-drop
+- Ends with an optional brutal one-liner
 
 Format:
 [First savage observation] [emoji combo] [Second savage observation] [emoji combo] [Optional: brutal closer]
