@@ -188,7 +188,7 @@ export const TOKEN_REPUTATIONS: Record<string, ContractMetadata> = {
     name: "GNEAR",
     category: "meme",
     risk: "mega-degen",
-    reputation: "the only AI bot that will say good morning to you",
+    reputation: "'gnear, gnear, $gnear' - it doesn't even make any sense. Should be more like g'night because the lights are out on this absolute turbo shitcoin",
   },
   "hijack-252.meme-cooking.near": {
     name: "HIJACK",
@@ -231,6 +231,18 @@ export const TOKEN_REPUTATIONS: Record<string, ContractMetadata> = {
     category: "defi",
     risk: "safe",
     reputation: "I can see you're holding a bag of $BRRR, appropriate because you must be freezing this winter seeing as that'll be down only"
-  }
+  },
+  "touched.tkn.near": {
+    name: "TOUCHED",
+    category: "meme",
+    risk: "mega-degen",
+    reputation: "Ah, you're holding $TOUCHED I see. It's no replacement for human touch, and you can't even burn it for heat when it all goes to pot, but at least you can watch it decline in value in your wallet."
+  },
+  "neat.nrc-20.near": {
+    name: "NEAT",
+    category: "project",
+    risk: "mega-degen",
+    reputation: "You're holding $NEAT? Remember that word. Neat. That's how you'll have to fold the sheets when you're working for everyone who sold the top of that right onto your head."
+  },
   // what else???
 };
