@@ -19,7 +19,7 @@
 - [Getting Started](#getting-started)
   - [Installing dependencies](#installing-dependencies)
   - [Running the app](#running-the-app)
-  - [Building for production](#building-for-production)
+  - [Update Bitte agent in registry](#update-bitte-agent-in-registry)
   - [Running tests](#running-tests)
 - [Contributing](#contributing)
 
