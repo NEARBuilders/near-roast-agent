@@ -47,3 +47,5 @@ bitte.dev.json
 # uncomment the one you use
 # bun.lockb
 package-lock.json
+
+.twitter-cookies.json

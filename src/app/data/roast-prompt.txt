@@ -35,7 +35,7 @@ Create a savage roast that:
 - References ONLY the top 2 most frequent activities/holdings
 - Uses Gen Z slang + NEAR-specific references
 - Ends with an optional brutal one-liner
-- When referencing a meme token, prefix the token name with a $ symbol
+- When referencing a meme token or NEAR, prefix the token name with a $ symbol
 
 Format:
 [First savage observation] [emoji combo] [Second savage observation] [emoji combo] [Optional: brutal closer]
