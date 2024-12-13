@@ -1,4 +1,5 @@
 import { Scraper } from "agent-twitter-client";
+import { kv } from '@vercel/kv';
 
 interface TwitterCookie {
   key: string;
@@ -33,10 +34,8 @@ export class TwitterService {
   private async setCookiesFromArray(cookiesArray: TwitterCookie[]) {
     const cookieStrings = cookiesArray.map(
       (cookie) =>
-        `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}; ${
-          cookie.secure ? "Secure" : ""
-        }; ${cookie.httpOnly ? "HttpOnly" : ""}; SameSite=${
-          cookie.sameSite || "Lax"
+        `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}; ${cookie.secure ? "Secure" : ""
+        }; ${cookie.httpOnly ? "HttpOnly" : ""}; SameSite=${cookie.sameSite || "Lax"
         }`,
     );
     await this.client.setCookies(cookieStrings);
@@ -46,7 +45,13 @@ export class TwitterService {
     username: string,
   ): Promise<TwitterCookie[] | null> {
     try {
-      // Try to read cookies from a local cache file
+      // Try Vercel KV first in production
+      if (process.env.VERCEL) {
+        const cookies = await kv.get<TwitterCookie[]>(`twitter_cookies:${username}`);
+        return cookies;
+      }
+
+      // Fallback to filesystem in development
       const fs = await import("fs/promises");
       const path = await import("path");
       const cookiePath = path.join(process.cwd(), ".twitter-cookies.json");
@@ -58,7 +63,7 @@ export class TwitterService {
         return cache[username];
       }
     } catch (error) {
-      // If file doesn't exist or is invalid, return null
+      // If storage access fails or is invalid, return null
       return null;
     }
     return null;
@@ -66,6 +71,13 @@ export class TwitterService {
 
   private async cacheCookies(username: string, cookies: TwitterCookie[]) {
     try {
+      // Use Vercel KV in production
+      if (process.env.VERCEL) {
+        await kv.set(`twitter_cookies:${username}`, cookies);
+        return;
+      }
+
+      // Use filesystem in development
       const fs = await import("fs/promises");
       const path = await import("path");
       const cookiePath = path.join(process.cwd(), ".twitter-cookies.json");
