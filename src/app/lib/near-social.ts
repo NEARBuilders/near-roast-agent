@@ -1,5 +1,6 @@
-
-export async function lookupTwitterHandle(accountId: string): Promise<string | null> {
+export async function lookupTwitterHandle(
+  accountId: string,
+): Promise<string | null> {
   const response = await fetch("https://api.near.social/get", {
     method: "POST",
     headers: {

@@ -33,21 +33,25 @@ export class TwitterService {
   private async setCookiesFromArray(cookiesArray: TwitterCookie[]) {
     const cookieStrings = cookiesArray.map(
       (cookie) =>
-        `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}; ${cookie.secure ? "Secure" : ""
-        }; ${cookie.httpOnly ? "HttpOnly" : ""}; SameSite=${cookie.sameSite || "Lax"
-        }`
+        `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}; ${
+          cookie.secure ? "Secure" : ""
+        }; ${cookie.httpOnly ? "HttpOnly" : ""}; SameSite=${
+          cookie.sameSite || "Lax"
+        }`,
     );
     await this.client.setCookies(cookieStrings);
   }
 
-  private async getCachedCookies(username: string): Promise<TwitterCookie[] | null> {
+  private async getCachedCookies(
+    username: string,
+  ): Promise<TwitterCookie[] | null> {
     try {
       // Try to read cookies from a local cache file
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      const cookiePath = path.join(process.cwd(), '.twitter-cookies.json');
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const cookiePath = path.join(process.cwd(), ".twitter-cookies.json");
 
-      const data = await fs.readFile(cookiePath, 'utf-8');
+      const data = await fs.readFile(cookiePath, "utf-8");
       const cache: CookieCache = JSON.parse(data);
 
       if (cache[username]) {
@@ -62,13 +66,13 @@ export class TwitterService {
 
   private async cacheCookies(username: string, cookies: TwitterCookie[]) {
     try {
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      const cookiePath = path.join(process.cwd(), '.twitter-cookies.json');
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const cookiePath = path.join(process.cwd(), ".twitter-cookies.json");
 
       let cache: CookieCache = {};
       try {
-        const data = await fs.readFile(cookiePath, 'utf-8');
+        const data = await fs.readFile(cookiePath, "utf-8");
         cache = JSON.parse(data);
       } catch (error) {
         // If file doesn't exist, start with empty cache
@@ -77,7 +81,7 @@ export class TwitterService {
       cache[username] = cookies;
       await fs.writeFile(cookiePath, JSON.stringify(cache, null, 2));
     } catch (error) {
-      console.error('Failed to cache cookies:', error);
+      console.error("Failed to cache cookies:", error);
     }
   }
 
@@ -100,11 +104,7 @@ export class TwitterService {
       // Try to login with retries
       while (true) {
         try {
-          await this.client.login(
-            username,
-            password,
-            email,
-          );
+          await this.client.login(username, password, email);
 
           if (await this.client.isLoggedIn()) {
             // Cache the new cookies
@@ -113,7 +113,7 @@ export class TwitterService {
             break;
           }
         } catch (error) {
-          console.error('Failed to login to Twitter, retrying...', error);
+          console.error("Failed to login to Twitter, retrying...", error);
         }
 
         // Wait before retrying
@@ -121,10 +121,9 @@ export class TwitterService {
       }
 
       this.isInitialized = true;
-      console.info('Successfully logged in to Twitter');
-
+      console.info("Successfully logged in to Twitter");
     } catch (error) {
-      console.error('Failed to initialize Twitter client:', error);
+      console.error("Failed to initialize Twitter client:", error);
       throw error;
     }
   }
@@ -133,13 +132,13 @@ export class TwitterService {
     if (!this.isInitialized) {
       await this.initialize();
     }
-    
+
     try {
       const response = await this.client.sendTweet(tweet);
       const body: any = await response.json();
       return body?.data?.create_tweet?.tweet_results?.result.rest_id;
     } catch (error) {
-      console.error('Error sending tweet:', error);
+      console.error("Error sending tweet:", error);
       throw error;
     }
   }
@@ -154,12 +153,12 @@ export class TwitterService {
       const tweetId = await this.postTweet(tweet);
 
       // Wait a moment before replying
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Reply to the test tweet
       await this.replyToTweet(tweetId, reply);
     } catch (error) {
-      console.error('Error sending test tweet and reply:', error);
+      console.error("Error sending test tweet and reply:", error);
     }
   }
 
@@ -167,7 +166,7 @@ export class TwitterService {
     try {
       await this.client.sendTweet(message, tweetId); // Second parameter is the tweet to reply to
     } catch (error) {
-      console.error('Error replying to tweet:', error);
+      console.error("Error replying to tweet:", error);
       throw error;
     }
   }
