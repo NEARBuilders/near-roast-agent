@@ -1,5 +1,5 @@
 import { runLLMInference } from "../lib/open-ai";
-import roastPrompt from '../data/roast-prompt.txt';
+import roastPrompt from "../data/roast-prompt.txt";
 
 export async function generateRoast(summary: string): Promise<string> {
   try {

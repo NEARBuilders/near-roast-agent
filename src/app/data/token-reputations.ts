@@ -188,7 +188,8 @@ export const TOKEN_REPUTATIONS: Record<string, ContractMetadata> = {
     name: "GNEAR",
     category: "meme",
     risk: "mega-degen",
-    reputation: "'gnear, gnear, $gnear' - it doesn't even make any sense. Should be more like g'night because the lights are out on this absolute turbo shitcoin",
+    reputation:
+      "'gnear, gnear, $gnear' - it doesn't even make any sense. Should be more like g'night because the lights are out on this absolute turbo shitcoin",
   },
   "hijack-252.meme-cooking.near": {
     name: "HIJACK",
@@ -206,43 +207,49 @@ export const TOKEN_REPUTATIONS: Record<string, ContractMetadata> = {
     name: "UWON",
     category: "meme",
     risk: "medium",
-    reputation: "Really, $UWON? Lol, lmao even. More like $ULOST"
+    reputation: "Really, $UWON? Lol, lmao even. More like $ULOST",
   },
   "edge-fast.near": {
     name: "FAST",
     category: "project",
     risk: "medium",
-    reputation: "$FAST? Really? Who do you think you are? Sonic? You need to be anything but fast when you're watching an Edge Vide (AI)"
+    reputation:
+      "$FAST? Really? Who do you think you are? Sonic? You need to be anything but fast when you're watching an Edge Vide (AI)",
   },
   "far-token.fewandfar-protocol.near": {
     name: "FAR",
     category: "project",
     risk: "mega-degen",
-    reputation: "Oh, you're still holding $FAR? Looks like you took a gamble on your hopes and dreams and lost (much like the @FewandFarNFT team)"
+    reputation:
+      "Oh, you're still holding $FAR? Looks like you took a gamble on your hopes and dreams and lost (much like the @FewandFarNFT team)",
   },
   "abg-966.meme-cooking.near": {
     name: "ABG",
     category: "meme",
     risk: "safe",
-    reputation: "I know you think holding $ABG will help you get closer to @ekang426 but: A) she's already taken and B) you're (probably) not an extremely intelligent, borderline spectrum, man working in tech so therefore all Asian women are out of your league"
+    reputation:
+      "I know you think holding $ABG will help you get closer to @ekang426 but: A) she's already taken and B) you're (probably) not an extremely intelligent, borderline spectrum, man working in tech so therefore all Asian women are out of your league",
   },
   "token.burrow.near": {
     name: "BRRR",
     category: "defi",
     risk: "safe",
-    reputation: "I can see you're holding a bag of $BRRR, appropriate because you must be freezing this winter seeing as that'll be down only"
+    reputation:
+      "I can see you're holding a bag of $BRRR, appropriate because you must be freezing this winter seeing as that'll be down only",
   },
   "touched.tkn.near": {
     name: "TOUCHED",
     category: "meme",
     risk: "mega-degen",
-    reputation: "Ah, you're holding $TOUCHED I see. It's no replacement for human touch, and you can't even burn it for heat when it all goes to pot, but at least you can watch it decline in value in your wallet."
+    reputation:
+      "Ah, you're holding $TOUCHED I see. It's no replacement for human touch, and you can't even burn it for heat when it all goes to pot, but at least you can watch it decline in value in your wallet.",
   },
   "neat.nrc-20.near": {
     name: "NEAT",
     category: "project",
     risk: "mega-degen",
-    reputation: "You're holding $NEAT? Remember that word. Neat. That's how you'll have to fold the sheets when you're working for everyone who sold the top of that right onto your head."
+    reputation:
+      "You're holding $NEAT? Remember that word. Neat. That's how you'll have to fold the sheets when you're working for everyone who sold the top of that right onto your head.",
   },
   // what else???
 };

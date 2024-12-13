@@ -10,7 +10,7 @@ type CacheEntry = {
 };
 
 export const maxDuration = 60; // 60 seconds, config for timeout
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const cache = new Map<string, CacheEntry>();
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
@@ -39,7 +39,7 @@ const app = new Elysia({ prefix: "/api", aot: false })
         console.log("generating roast...");
         roast = await generateRoast(summary);
 
-        console.log("generated roast.")
+        console.log("generated roast.");
 
         // Store in memory cache
         cache.set(cacheKey, {

@@ -136,10 +136,17 @@ export const INTERACTION_PATTERNS: InteractionPattern[] = [
     reputation: "call yourself builders but can't win a hackathon",
   },
   {
-    pattern: ["sharddog.near", "minter1.sharddog.near", "minter.sharddog.near", "raffle.sharddog.near", "claim.sharddog.near", "mint.sharddog.near"],
+    pattern: [
+      "sharddog.near",
+      "minter1.sharddog.near",
+      "minter.sharddog.near",
+      "raffle.sharddog.near",
+      "claim.sharddog.near",
+      "mint.sharddog.near",
+    ],
     name: "Shard Dog",
     category: "collector",
-    reputation: "farming for shart dogs"
-  }
+    reputation: "farming for shart dogs",
+  },
   // what else...
 ];

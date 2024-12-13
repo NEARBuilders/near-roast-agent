@@ -197,27 +197,30 @@ Notable Interactions:
 ${interactionSummary}
 
 🥩 STAKING BEHAVIOR:
-${data.staking.pools.length === 0
-      ? "Not staking anything, certified paper hands"
-      : `Staking in ${data.staking.pools.length} pools: ${data.staking.pools.join(", ")}`
-    }
+${
+  data.staking.pools.length === 0
+    ? "Not staking anything, certified paper hands"
+    : `Staking in ${data.staking.pools.length} pools: ${data.staking.pools.join(", ")}`
+}
 
 🎯 ANALYSIS SUMMARY:
-This account shows all the classic signs of ${txCount > 1000
+This account shows all the classic signs of ${
+    txCount > 1000
       ? "a terminally online degen"
       : txCount > 500
         ? "someone who needs to touch grass"
         : txCount > 100
           ? "your average NEAR user"
           : "a blockchain tourist"
-    }
+  }
 
-Their portfolio clearly indicates ${data.assets.totalTokens > 10
+Their portfolio clearly indicates ${
+    data.assets.totalTokens > 10
       ? "a severe addiction to shitcoins"
       : data.assets.totalTokens > 5
         ? "an aspiring shitcoin collector"
         : "someone who hasn't discovered meme tokens yet"
-    }`;
+  }`;
 }
 
 export async function getAccountSummary(accountId: string): Promise<string> {
