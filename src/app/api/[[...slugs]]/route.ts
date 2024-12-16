@@ -20,7 +20,7 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 let twitterService: TwitterService;
 
 // Initialize Twitter client at startup
-if (process.env.ENABLE_TWITTER) {
+if (process.env.ENABLE_TWITTER === "true") {
   twitterService = TwitterService.getInstance();
   twitterService.initialize().catch(console.error);
 }
@@ -72,7 +72,7 @@ const app = new Elysia({ prefix: "/api", aot: false })
 
         console.log("generated roast.");
 
-        if (process.env.ENABLE_TWITTER) {
+        if (process.env.ENABLE_TWITTER === "true") {
           // Post the roast to Twitter
           try {
             const twitterHandle = await lookupTwitterHandle(accountId);
