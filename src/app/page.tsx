@@ -61,7 +61,7 @@ export default function Home() {
           </li>
           <li className="transition-all hover:translate-x-2">
             <a
-              href="https://wallet.bitte.ai/smart-actions?mode=debug&agentId=near-roast-agent.vercel.app"
+              href="https://wallet.bitte.ai/smart-actions?agentId=near-roast-agent.vercel.app"
               target="_blank"
               rel="noreferrer"
               className="text-orange-200 hover:text-orange-400"
