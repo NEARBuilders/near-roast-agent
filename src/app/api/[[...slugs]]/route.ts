@@ -50,7 +50,7 @@ const app = new Elysia({ prefix: "/api", aot: false })
   .use(swagger())
   .get("/roast/:accountId", async ({ params: { accountId } }) => {
     accountId = accountId.toLowerCase();
-    
+
     // do an accountId check
     if (!(await isValidNearAccount(accountId))) {
       return "you're dumb, this isn't a real account";
