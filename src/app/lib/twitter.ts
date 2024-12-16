@@ -1,5 +1,4 @@
 import { Scraper } from "agent-twitter-client";
-import { kv } from '@vercel/kv';
 
 interface TwitterCookie {
   key: string;
@@ -45,12 +44,6 @@ export class TwitterService {
     username: string,
   ): Promise<TwitterCookie[] | null> {
     try {
-      // Try Vercel KV first in production
-      if (process.env.VERCEL) {
-        const cookies = await kv.get<TwitterCookie[]>(`twitter_cookies:${username}`);
-        return cookies;
-      }
-
       // Fallback to filesystem in development
       const fs = await import("fs/promises");
       const path = await import("path");
@@ -71,12 +64,6 @@ export class TwitterService {
 
   private async cacheCookies(username: string, cookies: TwitterCookie[]) {
     try {
-      // Use Vercel KV in production
-      if (process.env.VERCEL) {
-        await kv.set(`twitter_cookies:${username}`, cookies);
-        return;
-      }
-
       // Use filesystem in development
       const fs = await import("fs/promises");
       const path = await import("path");

@@ -238,7 +238,7 @@ export async function getAccountSummary(accountId: string): Promise<string> {
     // Create the summary from processed data
     const summary = createSummary(processedData);
 
-    console.log("summary: ", summary);
+    // console.log("summary: ", summary);
 
     return summary;
   } catch (error) {

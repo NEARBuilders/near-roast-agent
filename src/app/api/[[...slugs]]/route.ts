@@ -17,9 +17,13 @@ export const dynamic = "force-dynamic";
 const cache = new Map<string, CacheEntry>();
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
+let twitterService: TwitterService;
+
 // Initialize Twitter client at startup
-const twitterService = TwitterService.getInstance();
-twitterService.initialize().catch(console.error);
+if (process.env.ENABLE_TWITTER) {
+  twitterService = TwitterService.getInstance();
+  twitterService.initialize().catch(console.error);
+}
 
 const formatRoast = (roast: string, prefix: string): string => {
   // Remove any quotation marks from the roast
