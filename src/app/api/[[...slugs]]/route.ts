@@ -80,7 +80,7 @@ const app = new Elysia({ prefix: "/api", aot: false })
             const formattedRoast = formatRoast(roast, prefix);
             await twitterService.postTweetAndReply(
               `${prefix}${formattedRoast}`,
-              `Get roasted here: https://wallet.bitte.ai/smart-actions?mode=debug&agentId=near-roast-agent.vercel.app. Who's next on the hot seat? Nominate below! 👇 #12DaysOfRoastmas`,
+              `Get roasted here: https://wallet.bitte.ai/smart-actions?agentId=near-roast-agent.vercel.app. Who's next on the hot seat? Nominate below! 👇 #12DaysOfRoastmas`,
             );
             console.log("Posted roast to Twitter");
           } catch (error) {
