@@ -8,6 +8,7 @@ import {
   TokenContract,
   Transaction,
 } from "../lib/fastnear";
+import { getWealth, Wealth } from "../lib/pikespeak";
 import {
   analyzeInteractionPatterns,
   analyzeNftHoldings,
@@ -95,6 +96,7 @@ function getUniqueAddresses(
 function processAccountData(
   details: FullAccountDetails,
   allActivity: AccountActivityResponse,
+  wealth: Wealth | null,
 ): AccountSummaryData {
   // Process balance
   const nearBalance = formatNearAmount(details.state.balance);
@@ -108,7 +110,9 @@ function processAccountData(
     recentTransactions,
   );
 
-  const tokenAnalysis = analyzeTokenHoldings(details.tokens);
+  const tokenHoldings = details.tokens.filter(it => it.balance !== "0");
+
+  const tokenAnalysis = analyzeTokenHoldings(tokenHoldings, wealth);
   const nftAnalysis = analyzeNftHoldings(details.nfts);
   const patterns = analyzeInteractionPatterns(uniqueInteractions);
 
@@ -119,8 +123,8 @@ function processAccountData(
       storage: details.state.storage_bytes,
     },
     assets: {
-      totalTokens: details.tokens.length,
-      tokenHoldings: details.tokens,
+      totalTokens: tokenHoldings.length,
+      tokenHoldings: tokenHoldings,
       totalNFTs: details.nfts.length,
       nftHoldings: details.nfts.map((nft) => nft.contract_id),
     },
@@ -197,30 +201,27 @@ Notable Interactions:
 ${interactionSummary}
 
 🥩 STAKING BEHAVIOR:
-${
-  data.staking.pools.length === 0
-    ? "Not staking anything, certified paper hands"
-    : `Staking in ${data.staking.pools.length} pools: ${data.staking.pools.join(", ")}`
-}
+${data.staking.pools.length === 0
+      ? "Not staking anything, certified paper hands"
+      : `Staking in ${data.staking.pools.length} pools: ${data.staking.pools.join(", ")}`
+    }
 
 🎯 ANALYSIS SUMMARY:
-This account shows all the classic signs of ${
-    txCount > 1000
+This account shows all the classic signs of ${txCount > 1000
       ? "a terminally online degen"
       : txCount > 500
         ? "someone who needs to touch grass"
         : txCount > 100
           ? "your average NEAR user"
           : "a blockchain tourist"
-  }
+    }
 
-Their portfolio clearly indicates ${
-    data.assets.totalTokens > 10
+Their portfolio clearly indicates ${data.assets.totalTokens > 10
       ? "a severe addiction to shitcoins"
       : data.assets.totalTokens > 5
         ? "an aspiring shitcoin collector"
         : "someone who hasn't discovered meme tokens yet"
-  }`;
+    }`;
 }
 
 export async function getAccountSummary(accountId: string): Promise<string> {
@@ -232,8 +233,10 @@ export async function getAccountSummary(accountId: string): Promise<string> {
       getAllAccountActivity(accountId, MAX_NUM_PAGES),
     ]);
 
+    const wealth = await getWealth(accountId);
+
     // Process the data into a structured format
-    const processedData = processAccountData(details, allActivity);
+    const processedData = processAccountData(details, allActivity, wealth);
 
     // Create the summary from processed data
     const summary = createSummary(processedData);

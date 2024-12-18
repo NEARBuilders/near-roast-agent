@@ -69,6 +69,8 @@ const app = new Elysia({ prefix: "/api", aot: false })
         console.log("getting account summary...");
         const summary = await getAccountSummary(accountId);
 
+        console.log(summary);
+
         console.log("generating roast...");
         roast = await generateRoast(summary);
 
